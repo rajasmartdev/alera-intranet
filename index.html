@@ -1,0 +1,1147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Alera Medtech — Document Hub</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --alera: #1A3FD4;
+    --alera-dark: #1230A8;
+    --alera-light: #E8EEFB;
+    --alera-mid: #4D6DE0;
+    --text: #0D1117;
+    --text-muted: #5A6475;
+    --border: #DDE2EC;
+    --bg: #F4F6FB;
+    --white: #FFFFFF;
+    --success: #10B981;
+    --danger: #EF4444;
+    --warn: #F59E0B;
+    --shadow: 0 2px 12px rgba(26,63,212,0.10);
+    --shadow-lg: 0 8px 32px rgba(26,63,212,0.16);
+    --radius: 10px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+  /* ── LOGIN ── */
+  #login-screen {
+    min-height: 100vh; display: flex; align-items: center; justify-content: center;
+    background: linear-gradient(135deg, #0a1a5e 0%, var(--alera) 60%, #4D6DE0 100%);
+    position: relative; overflow: hidden;
+  }
+  #login-screen::before {
+    content:''; position:absolute; inset:0;
+    background: radial-gradient(ellipse at 70% 30%, rgba(255,255,255,0.07) 0%, transparent 60%);
+  }
+  .login-card {
+    background: white; border-radius: 18px; padding: 48px 44px; width: 420px;
+    box-shadow: 0 24px 80px rgba(0,0,10,0.35); position: relative; z-index:1;
+  }
+  .login-logo { text-align:center; margin-bottom:32px; }
+  .login-logo .wordmark {
+    font-size: 36px; font-weight: 700; color: var(--alera); letter-spacing: -1.5px; display:block;
+  }
+  .login-logo .tagline { font-size:13px; color:var(--text-muted); margin-top:4px; letter-spacing:.5px; }
+  .login-card h2 { font-size:18px; font-weight:600; margin-bottom:24px; color:var(--text); }
+  .form-group { margin-bottom:18px; }
+  .form-group label { display:block; font-size:12px; font-weight:600; color:var(--text-muted); text-transform:uppercase; letter-spacing:.7px; margin-bottom:7px; }
+  .form-group input {
+    width:100%; padding:12px 14px; border:1.5px solid var(--border); border-radius:8px;
+    font-family:inherit; font-size:15px; color:var(--text); outline:none; transition:border .2s;
+  }
+  .form-group input:focus { border-color:var(--alera); box-shadow:0 0 0 3px var(--alera-light); }
+  .btn-login {
+    width:100%; padding:13px; background:var(--alera); color:white; border:none; border-radius:8px;
+    font-family:inherit; font-size:15px; font-weight:600; cursor:pointer; margin-top:8px;
+    transition:background .2s, transform .1s;
+  }
+  .btn-login:hover { background:var(--alera-dark); }
+  .btn-login:active { transform:scale(.99); }
+  .login-error { color:var(--danger); font-size:13px; margin-top:10px; text-align:center; display:none; }
+
+  /* ── APP SHELL ── */
+  #app { display:none; min-height:100vh; }
+  header {
+    background: var(--alera); color:white; padding:0 32px; height:60px;
+    display:flex; align-items:center; justify-content:space-between;
+    box-shadow:0 2px 12px rgba(26,63,212,0.3); position:sticky; top:0; z-index:100;
+  }
+  .header-logo { font-size:22px; font-weight:700; letter-spacing:-1px; }
+  .header-right { display:flex; align-items:center; gap:20px; }
+  .header-user { font-size:13px; opacity:.8; }
+  .btn-logout { background:rgba(255,255,255,0.15); border:1px solid rgba(255,255,255,0.3); color:white; padding:6px 14px; border-radius:6px; font-family:inherit; font-size:13px; cursor:pointer; transition:background .2s; }
+  .btn-logout:hover { background:rgba(255,255,255,0.25); }
+
+  .main { display:flex; height:calc(100vh - 60px); }
+
+  /* ── SIDEBAR ── */
+  nav {
+    width:220px; background:white; border-right:1px solid var(--border);
+    padding:24px 12px; flex-shrink:0; overflow-y:auto;
+  }
+  nav .nav-section { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:1px; color:var(--text-muted); padding:0 10px; margin-bottom:8px; margin-top:20px; }
+  nav .nav-section:first-child { margin-top:0; }
+  nav a {
+    display:flex; align-items:center; gap:10px; padding:9px 10px; border-radius:7px;
+    font-size:14px; font-weight:500; color:var(--text-muted); text-decoration:none; cursor:pointer;
+    transition:background .15s, color .15s; margin-bottom:2px;
+  }
+  nav a:hover { background:var(--alera-light); color:var(--alera); }
+  nav a.active { background:var(--alera-light); color:var(--alera); font-weight:600; }
+  nav a .icon { font-size:16px; width:20px; text-align:center; }
+
+  /* ── CONTENT ── */
+  .content { flex:1; overflow-y:auto; padding:32px; }
+  .page { display:none; }
+  .page.active { display:block; }
+
+  .page-header { margin-bottom:28px; }
+  .page-header h1 { font-size:24px; font-weight:700; letter-spacing:-.5px; }
+  .page-header p { color:var(--text-muted); font-size:14px; margin-top:4px; }
+
+  /* ── DASHBOARD ── */
+  .doc-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(180px,1fr)); gap:16px; margin-bottom:32px; }
+  .doc-card {
+    background:white; border:1.5px solid var(--border); border-radius:var(--radius);
+    padding:20px 16px; cursor:pointer; transition:border-color .2s, box-shadow .2s, transform .15s;
+    text-align:center;
+  }
+  .doc-card:hover { border-color:var(--alera); box-shadow:var(--shadow-lg); transform:translateY(-2px); }
+  .doc-card .emoji { font-size:28px; margin-bottom:10px; display:block; }
+  .doc-card .label { font-size:13px; font-weight:600; color:var(--text); }
+  .doc-card .prefix { font-size:11px; color:var(--text-muted); font-family:'DM Mono',monospace; margin-top:4px; }
+
+  /* ── FORM BUILDER ── */
+  .form-card { background:white; border:1.5px solid var(--border); border-radius:var(--radius); overflow:hidden; margin-bottom:20px; }
+  .form-card-header { background:var(--alera-light); border-bottom:1px solid var(--border); padding:14px 20px; display:flex; align-items:center; gap:10px; }
+  .form-card-header h3 { font-size:14px; font-weight:600; color:var(--alera); }
+  .form-card-body { padding:20px; }
+
+  .grid-2 { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+  .grid-3 { display:grid; grid-template-columns:1fr 1fr 1fr; gap:16px; }
+  .span-2 { grid-column:span 2; }
+
+  .field { margin-bottom:0; }
+  .field label { display:block; font-size:11px; font-weight:600; color:var(--text-muted); text-transform:uppercase; letter-spacing:.6px; margin-bottom:5px; }
+  .field input, .field select, .field textarea {
+    width:100%; padding:9px 11px; border:1.5px solid var(--border); border-radius:7px;
+    font-family:inherit; font-size:13.5px; color:var(--text); outline:none; transition:border .2s; background:white;
+  }
+  .field textarea { resize:vertical; min-height:70px; }
+  .field input:focus, .field select:focus, .field textarea:focus { border-color:var(--alera); box-shadow:0 0 0 3px var(--alera-light); }
+
+  /* ── LINE ITEMS ── */
+  .line-items-table { width:100%; border-collapse:collapse; }
+  .line-items-table th { font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.6px; color:var(--text-muted); padding:8px 10px; background:var(--bg); border-bottom:1.5px solid var(--border); text-align:left; }
+  .line-items-table td { padding:6px 6px; border-bottom:1px solid var(--border); vertical-align:middle; }
+  .line-items-table input, .line-items-table select { padding:7px 9px; font-size:13px; }
+  .line-items-table .del-btn { background:none; border:none; color:#ccc; font-size:16px; cursor:pointer; padding:4px 8px; border-radius:4px; transition:color .15s; }
+  .line-items-table .del-btn:hover { color:var(--danger); background:#FEF2F2; }
+  .line-items-table tfoot td { padding:8px 10px; font-weight:600; font-size:13px; }
+
+  .btn-add-row { background:none; border:1.5px dashed var(--border); color:var(--text-muted); font-family:inherit; font-size:13px; padding:9px 16px; border-radius:7px; cursor:pointer; width:100%; margin-top:8px; transition:border-color .2s, color .2s; }
+  .btn-add-row:hover { border-color:var(--alera); color:var(--alera); }
+
+  .totals-section { margin-top:16px; display:flex; justify-content:flex-end; }
+  .totals-box { background:var(--alera-light); border-radius:8px; padding:14px 20px; min-width:240px; }
+  .totals-row { display:flex; justify-content:space-between; font-size:13px; padding:3px 0; color:var(--text-muted); }
+  .totals-row.total { font-size:15px; font-weight:700; color:var(--alera); border-top:1.5px solid var(--border); margin-top:6px; padding-top:8px; }
+
+  /* ── BUTTONS ── */
+  .actions { display:flex; gap:12px; margin-top:24px; }
+  .btn-primary { background:var(--alera); color:white; border:none; padding:11px 24px; border-radius:8px; font-family:inherit; font-size:14px; font-weight:600; cursor:pointer; transition:background .2s; display:flex; align-items:center; gap:8px; }
+  .btn-primary:hover { background:var(--alera-dark); }
+  .btn-secondary { background:white; color:var(--alera); border:1.5px solid var(--alera); padding:11px 24px; border-radius:8px; font-family:inherit; font-size:14px; font-weight:600; cursor:pointer; transition:background .2s; display:flex; align-items:center; gap:8px; }
+  .btn-secondary:hover { background:var(--alera-light); }
+  .btn-ghost { background:white; color:var(--text-muted); border:1.5px solid var(--border); padding:11px 24px; border-radius:8px; font-family:inherit; font-size:14px; font-weight:500; cursor:pointer; }
+  .btn-ghost:hover { border-color:var(--text-muted); color:var(--text); }
+
+  /* ── TOAST ── */
+  #toast { position:fixed; bottom:28px; right:28px; background:#0D1117; color:white; padding:12px 20px; border-radius:10px; font-size:14px; font-weight:500; opacity:0; transform:translateY(12px); transition:opacity .3s, transform .3s; z-index:9999; pointer-events:none; }
+  #toast.show { opacity:1; transform:translateY(0); }
+
+  /* ── HISTORY ── */
+  .history-table { width:100%; border-collapse:collapse; background:white; border-radius:var(--radius); overflow:hidden; border:1.5px solid var(--border); }
+  .history-table th { background:var(--alera-light); font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.6px; color:var(--alera); padding:12px 16px; text-align:left; }
+  .history-table td { padding:12px 16px; font-size:13.5px; border-bottom:1px solid var(--border); }
+  .history-table tr:last-child td { border-bottom:none; }
+  .badge { display:inline-block; padding:3px 9px; border-radius:20px; font-size:11px; font-weight:700; letter-spacing:.3px; }
+  .badge-qt { background:#EFF6FF; color:#1D4ED8; }
+  .badge-pf { background:#F0FDF4; color:#166534; }
+  .badge-inv { background:#FFF7ED; color:#9A3412; }
+  .badge-so { background:#F5F3FF; color:#5B21B6; }
+  .badge-ci { background:#FFF1F2; color:#9F1239; }
+  .badge-pl { background:#ECFDF5; color:#065F46; }
+  .badge-coo { background:#FFFBEB; color:#92400E; }
+
+  @media (max-width:768px) {
+    nav { display:none; }
+    .content { padding:16px; }
+    .grid-2, .grid-3 { grid-template-columns:1fr; }
+    .span-2 { grid-column:span 1; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ══════ LOGIN ══════ -->
+<div id="login-screen">
+  <div class="login-card">
+    <div class="login-logo">
+      <span class="wordmark">alera</span>
+      <span class="tagline">MEDTECH LLC · DOCUMENT HUB</span>
+    </div>
+    <h2>Sign in to continue</h2>
+    <div class="form-group">
+      <label>Username</label>
+      <input type="text" id="login-user" placeholder="username" autocomplete="username">
+    </div>
+    <div class="form-group">
+      <label>Password</label>
+      <input type="password" id="login-pass" placeholder="••••••••" autocomplete="current-password">
+    </div>
+    <button class="btn-login" onclick="doLogin()">Sign In</button>
+    <div class="login-error" id="login-error">Invalid username or password.</div>
+  </div>
+</div>
+
+<!-- ══════ APP ══════ -->
+<div id="app">
+  <header>
+    <div class="header-logo">alera <span style="font-weight:300;opacity:.7;font-size:14px;">medtech</span></div>
+    <div class="header-right">
+      <span class="header-user" id="header-user"></span>
+      <button class="btn-logout" onclick="doLogout()">Sign Out</button>
+    </div>
+  </header>
+  <div class="main">
+    <nav>
+      <div class="nav-section">Overview</div>
+      <a onclick="showPage('dashboard')" id="nav-dashboard" class="active"><span class="icon">🏠</span>Dashboard</a>
+      <a onclick="showPage('history')" id="nav-history"><span class="icon">📋</span>Recent Docs</a>
+      <div class="nav-section">Documents</div>
+      <a onclick="showPage('qt')" id="nav-qt"><span class="icon">💬</span>Quotation</a>
+      <a onclick="showPage('pf')" id="nav-pf"><span class="icon">📄</span>Pro Forma Invoice</a>
+      <a onclick="showPage('inv')" id="nav-inv"><span class="icon">🧾</span>Invoice</a>
+      <a onclick="showPage('so')" id="nav-so"><span class="icon">📦</span>Sales Order</a>
+      <a onclick="showPage('ci')" id="nav-ci"><span class="icon">🌐</span>Commercial Invoice</a>
+      <a onclick="showPage('pl')" id="nav-pl"><span class="icon">📝</span>Packing List</a>
+      <a onclick="showPage('coo')" id="nav-coo"><span class="icon">🏳️</span>Certificate of Origin</a>
+    </nav>
+
+    <div class="content">
+
+      <!-- DASHBOARD -->
+      <div class="page active" id="page-dashboard">
+        <div class="page-header">
+          <h1>Document Hub</h1>
+          <p>Generate professional PDF documents for Alera Medtech LLC</p>
+        </div>
+        <div class="doc-grid">
+          <div class="doc-card" onclick="showPage('qt')"><span class="emoji">💬</span><div class="label">Quotation</div><div class="prefix">QT-2025-XXXX</div></div>
+          <div class="doc-card" onclick="showPage('pf')"><span class="emoji">📄</span><div class="label">Pro Forma Invoice</div><div class="prefix">PF-2025-XXXX</div></div>
+          <div class="doc-card" onclick="showPage('inv')"><span class="emoji">🧾</span><div class="label">Invoice</div><div class="prefix">INV-2025-XXXX</div></div>
+          <div class="doc-card" onclick="showPage('so')"><span class="emoji">📦</span><div class="label">Sales Order</div><div class="prefix">SO-2025-XXXX</div></div>
+          <div class="doc-card" onclick="showPage('ci')"><span class="emoji">🌐</span><div class="label">Commercial Invoice</div><div class="prefix">CI-2025-XXXX</div></div>
+          <div class="doc-card" onclick="showPage('pl')"><span class="emoji">📝</span><div class="label">Packing List</div><div class="prefix">PL-2025-XXXX</div></div>
+          <div class="doc-card" onclick="showPage('coo')"><span class="emoji">🏳️</span><div class="label">Certificate of Origin</div><div class="prefix">COO-2025-XXXX</div></div>
+        </div>
+      </div>
+
+      <!-- HISTORY -->
+      <div class="page" id="page-history">
+        <div class="page-header"><h1>Recent Documents</h1><p>Documents generated in this session</p></div>
+        <table class="history-table">
+          <thead><tr><th>Document #</th><th>Type</th><th>Customer</th><th>Amount</th><th>Date</th><th></th></tr></thead>
+          <tbody id="history-body"><tr><td colspan="6" style="text-align:center;color:var(--text-muted);padding:32px;">No documents yet.</td></tr></tbody>
+        </table>
+      </div>
+
+      <!-- ═══ QUOTATION ═══ -->
+      <div class="page" id="page-qt">
+        <div class="page-header"><h1>💬 Quotation</h1><p>Generate a quote for a customer</p></div>
+        <div id="form-qt"></div>
+        <div class="actions">
+          <button class="btn-primary" onclick="generatePDF('qt')">⬇ Generate PDF</button>
+          <button class="btn-ghost" onclick="clearForm('qt')">Clear</button>
+        </div>
+      </div>
+
+      <!-- ═══ PRO FORMA ═══ -->
+      <div class="page" id="page-pf">
+        <div class="page-header"><h1>📄 Pro Forma Invoice</h1><p>Create a pre-shipment invoice</p></div>
+        <div id="form-pf"></div>
+        <div class="actions">
+          <button class="btn-primary" onclick="generatePDF('pf')">⬇ Generate PDF</button>
+          <button class="btn-ghost" onclick="clearForm('pf')">Clear</button>
+        </div>
+      </div>
+
+      <!-- ═══ INVOICE ═══ -->
+      <div class="page" id="page-inv">
+        <div class="page-header"><h1>🧾 Invoice</h1><p>Issue a standard invoice</p></div>
+        <div id="form-inv"></div>
+        <div class="actions">
+          <button class="btn-primary" onclick="generatePDF('inv')">⬇ Generate PDF</button>
+          <button class="btn-ghost" onclick="clearForm('inv')">Clear</button>
+        </div>
+      </div>
+
+      <!-- ═══ SALES ORDER ═══ -->
+      <div class="page" id="page-so">
+        <div class="page-header"><h1>📦 Sales Order</h1><p>Confirm a customer purchase order</p></div>
+        <div id="form-so"></div>
+        <div class="actions">
+          <button class="btn-primary" onclick="generatePDF('so')">⬇ Generate PDF</button>
+          <button class="btn-ghost" onclick="clearForm('so')">Clear</button>
+        </div>
+      </div>
+
+      <!-- ═══ COMMERCIAL INVOICE ═══ -->
+      <div class="page" id="page-ci">
+        <div class="page-header"><h1>🌐 Commercial Invoice</h1><p>Export / customs invoice</p></div>
+        <div id="form-ci"></div>
+        <div class="actions">
+          <button class="btn-primary" onclick="generatePDF('ci')">⬇ Generate PDF</button>
+          <button class="btn-ghost" onclick="clearForm('ci')">Clear</button>
+        </div>
+      </div>
+
+      <!-- ═══ PACKING LIST ═══ -->
+      <div class="page" id="page-pl">
+        <div class="page-header"><h1>📝 Packing List</h1><p>Detailed shipment packing list</p></div>
+        <div id="form-pl"></div>
+        <div class="actions">
+          <button class="btn-primary" onclick="generatePDF('pl')">⬇ Generate PDF</button>
+          <button class="btn-ghost" onclick="clearForm('pl')">Clear</button>
+        </div>
+      </div>
+
+      <!-- ═══ CERTIFICATE OF ORIGIN ═══ -->
+      <div class="page" id="page-coo">
+        <div class="page-header"><h1>🏳️ Certificate of Origin</h1><p>Certify goods country of origin</p></div>
+        <div id="form-coo"></div>
+        <div class="actions">
+          <button class="btn-primary" onclick="generatePDF('coo')">⬇ Generate PDF</button>
+          <button class="btn-ghost" onclick="clearForm('coo')">Clear</button>
+        </div>
+      </div>
+
+    </div><!-- /content -->
+  </div><!-- /main -->
+</div><!-- /app -->
+
+<div id="toast"></div>
+
+<script>
+// ══════════════════════════════════════════════
+// AUTH
+// ══════════════════════════════════════════════
+const USERS = {
+  'admin': 'alera2026',
+  'sales': 'alera2026',
+};
+let currentUser = null;
+
+function doLogin() {
+  const u = document.getElementById('login-user').value.trim();
+  const p = document.getElementById('login-pass').value;
+  if (USERS[u] && USERS[u] === p) {
+    currentUser = u;
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('app').style.display = 'block';
+    document.getElementById('header-user').textContent = u;
+    initForms();
+  } else {
+    document.getElementById('login-error').style.display = 'block';
+  }
+}
+function doLogout() {
+  document.getElementById('login-screen').style.display = 'flex';
+  document.getElementById('app').style.display = 'none';
+  document.getElementById('login-user').value = '';
+  document.getElementById('login-pass').value = '';
+  document.getElementById('login-error').style.display = 'none';
+}
+document.getElementById('login-pass').addEventListener('keydown', e => { if(e.key==='Enter') doLogin(); });
+
+// ══════════════════════════════════════════════
+// NAVIGATION
+// ══════════════════════════════════════════════
+function showPage(id) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('nav a').forEach(a => a.classList.remove('active'));
+  document.getElementById('page-' + id).classList.add('active');
+  document.getElementById('nav-' + id).classList.add('active');
+}
+
+// ══════════════════════════════════════════════
+// COMPANY DATA
+// ══════════════════════════════════════════════
+const CO = {
+  name: 'Alera Medtech LLC',
+  ein: '88-3147715',
+  address: '77 Rowe Street, Suite 2C\nAuburndale, MA 02466\nUnited States',
+  phone: '+1 888 702-5372',
+  email: 'sales.info@aleramedtech.com',
+  web: 'www.aleramedtech.com',
+  bank: 'Bank of America',
+  acctName: 'Alera Medtech LLC',
+  acctNum: '466016030996',
+  achRouting: '011000138',
+  wireRouting: '026009593',
+  swift: 'BOFAUS3N',
+};
+
+const PREFIXES = { qt:'QT', pf:'PF', inv:'INV', so:'SO', ci:'CI', pl:'PL', coo:'COO' };
+const YEAR = new Date().getFullYear();
+let docCounters = { qt:1, pf:1, inv:1, so:1, ci:1, pl:1, coo:1 };
+let docHistory = [];
+
+function nextDocNum(type) {
+  const n = String(docCounters[type]).padStart(4,'0');
+  docCounters[type]++;
+  return `${PREFIXES[type]}-${YEAR}-${n}`;
+}
+function today() {
+  return new Date().toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric'});
+}
+function todayISO() { return new Date().toISOString().split('T')[0]; }
+
+// ══════════════════════════════════════════════
+// LINE ITEMS ENGINE
+// ══════════════════════════════════════════════
+let lineData = {};
+
+function initLines(formId, hasPricing=true) {
+  lineData[formId] = [newLine()];
+  renderLines(formId, hasPricing);
+}
+
+function newLine(hasPricing=true) {
+  return { desc:'', qty:1, unit:'pcs', unitPrice:0, hscode:'', weight:0, netWeight:0, grossWeight:0, dims:'', boxCount:1 };
+}
+
+function renderLines(formId, hasPricing=true) {
+  const container = document.getElementById('lines-' + formId);
+  if (!container) return;
+  const isPL = formId === 'pl';
+  let html = `<table class="line-items-table"><thead><tr>`;
+  if (!isPL) {
+    html += `<th style="width:38%">Description</th><th>Qty</th><th>Unit</th>`;
+    if (hasPricing) html += `<th>Unit Price (USD)</th><th>Amount (USD)</th>`;
+    html += `<th style="width:32px"></th>`;
+  } else {
+    html += `<th style="width:30%">Description</th><th>HS Code</th><th>Qty</th><th>Unit</th><th>Net Wt (kg)</th><th>Gross Wt (kg)</th><th>Dims (cm)</th><th>Boxes</th><th style="width:32px"></th>`;
+  }
+  html += `</tr></thead><tbody>`;
+
+  lineData[formId].forEach((l,i) => {
+    html += `<tr>`;
+    if (!isPL) {
+      html += `<td><input class="field" value="${esc(l.desc)}" oninput="lineData['${formId}'][${i}].desc=this.value;recalc('${formId}')" placeholder="Item description"></td>`;
+      html += `<td><input class="field" type="number" value="${l.qty}" min="0" style="width:70px" oninput="lineData['${formId}'][${i}].qty=+this.value;recalc('${formId}')"></td>`;
+      html += `<td><select class="field" style="width:80px" onchange="lineData['${formId}'][${i}].unit=this.value">${['pcs','set','box','ea','lot','unit','kg','g','ml','L'].map(u=>`<option ${u===l.unit?'selected':''}>${u}</option>`).join('')}</select></td>`;
+      if (hasPricing) {
+        html += `<td><input class="field" type="number" value="${l.unitPrice}" min="0" step="0.01" style="width:110px" oninput="lineData['${formId}'][${i}].unitPrice=+this.value;recalc('${formId}')"></td>`;
+        html += `<td style="font-family:'DM Mono',monospace;font-size:13px;padding:6px 10px;">${fmt(l.qty*l.unitPrice)}</td>`;
+      }
+    } else {
+      html += `<td><input class="field" value="${esc(l.desc)}" oninput="lineData['${formId}'][${i}].desc=this.value" placeholder="Item description"></td>`;
+      html += `<td><input class="field" value="${esc(l.hscode)}" style="width:90px" oninput="lineData['${formId}'][${i}].hscode=this.value" placeholder="0000.00"></td>`;
+      html += `<td><input class="field" type="number" value="${l.qty}" min="0" style="width:70px" oninput="lineData['${formId}'][${i}].qty=+this.value"></td>`;
+      html += `<td><select class="field" style="width:80px" onchange="lineData['${formId}'][${i}].unit=this.value">${['pcs','set','box','ea','lot','unit','kg','g','ml','L'].map(u=>`<option ${u===l.unit?'selected':''}>${u}</option>`).join('')}</select></td>`;
+      html += `<td><input class="field" type="number" value="${l.netWeight}" min="0" step="0.01" style="width:80px" oninput="lineData['${formId}'][${i}].netWeight=+this.value"></td>`;
+      html += `<td><input class="field" type="number" value="${l.grossWeight}" min="0" step="0.01" style="width:80px" oninput="lineData['${formId}'][${i}].grossWeight=+this.value"></td>`;
+      html += `<td><input class="field" value="${esc(l.dims)}" style="width:100px" oninput="lineData['${formId}'][${i}].dims=this.value" placeholder="L×W×H"></td>`;
+      html += `<td><input class="field" type="number" value="${l.boxCount}" min="0" style="width:60px" oninput="lineData['${formId}'][${i}].boxCount=+this.value"></td>`;
+    }
+    html += `<td><button class="del-btn" onclick="delLine('${formId}',${i})">✕</button></td></tr>`;
+  });
+
+  html += `</tbody>`;
+  if (hasPricing && !isPL) {
+    html += `<tfoot id="tfoot-${formId}"></tfoot>`;
+  }
+  html += `</table>`;
+  html += `<button class="btn-add-row" onclick="addLine('${formId}',${hasPricing})">+ Add Line Item</button>`;
+  container.innerHTML = html;
+  if (hasPricing && !isPL) recalc(formId);
+}
+
+function addLine(formId, hasPricing=true) {
+  lineData[formId].push(newLine());
+  renderLines(formId, hasPricing);
+}
+function delLine(formId, i) {
+  if (lineData[formId].length === 1) return;
+  lineData[formId].splice(i,1);
+  const isPL = formId === 'pl';
+  renderLines(formId, !isPL);
+}
+
+function recalc(formId) {
+  const lines = lineData[formId];
+  const subtotal = lines.reduce((s,l) => s + l.qty*l.unitPrice, 0);
+  const disc = parseFloat(document.getElementById('disc-'+formId)?.value || 0);
+  const discAmt = subtotal * (disc/100);
+  const ship = parseFloat(document.getElementById('ship-'+formId)?.value || 0);
+  const tax = parseFloat(document.getElementById('tax-'+formId)?.value || 0);
+  const taxAmt = (subtotal - discAmt) * (tax/100);
+  const total = subtotal - discAmt + ship + taxAmt;
+
+  const tfoot = document.getElementById('tfoot-'+formId);
+  if (!tfoot) return;
+  const cols = formId === 'ci' ? 5 : 5;
+  tfoot.innerHTML = `
+    <tr><td colspan="3"></td><td style="color:var(--text-muted)">Subtotal</td><td style="font-family:'DM Mono',monospace">${fmt(subtotal)}</td></tr>
+    ${disc>0?`<tr><td colspan="3"></td><td style="color:var(--text-muted)">Discount (${disc}%)</td><td style="font-family:'DM Mono',monospace">-${fmt(discAmt)}</td></tr>`:''}
+    ${ship>0?`<tr><td colspan="3"></td><td style="color:var(--text-muted)">Shipping</td><td style="font-family:'DM Mono',monospace">${fmt(ship)}</td></tr>`:''}
+    ${tax>0?`<tr><td colspan="3"></td><td style="color:var(--text-muted)">Tax (${tax}%)</td><td style="font-family:'DM Mono',monospace">${fmt(taxAmt)}</td></tr>`:''}
+    <tr><td colspan="3"></td><td style="font-weight:700;color:var(--alera);font-size:14px">TOTAL USD</td><td style="font-weight:700;color:var(--alera);font-family:'DM Mono',monospace;font-size:14px">${fmt(total)}</td></tr>`;
+}
+
+function fmt(n) { return '$'+Number(n).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g,','); }
+function fmtN(n) { return Number(n).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g,','); }
+function esc(s) { return (s||'').replace(/"/g,'&quot;'); }
+
+// ══════════════════════════════════════════════
+// FORM TEMPLATES
+// ══════════════════════════════════════════════
+function commonHeader(formId) {
+  return `
+  <div class="form-card">
+    <div class="form-card-header"><h3>📋 Document Info</h3></div>
+    <div class="form-card-body">
+      <div class="grid-3">
+        <div class="field"><label>Document Number</label><input id="${formId}-docnum" placeholder="Auto-generated"></div>
+        <div class="field"><label>Date</label><input type="date" id="${formId}-date" value="${todayISO()}"></div>
+        <div class="field"><label>Valid Until / Due Date</label><input type="date" id="${formId}-duedate"></div>
+      </div>
+    </div>
+  </div>`;
+}
+
+function customerBlock(formId) {
+  return `
+  <div class="form-card">
+    <div class="form-card-header"><h3>👤 Customer / Bill To</h3></div>
+    <div class="form-card-body">
+      <div class="grid-2">
+        <div class="field"><label>Company Name</label><input id="${formId}-custname" placeholder="Customer Company Name"></div>
+        <div class="field"><label>Contact Person</label><input id="${formId}-custcontact" placeholder="Full Name"></div>
+        <div class="field span-2"><label>Address</label><textarea id="${formId}-custaddr" rows="3" placeholder="Street, City, State, ZIP, Country"></textarea></div>
+        <div class="field"><label>Email</label><input type="email" id="${formId}-custemail" placeholder="contact@company.com"></div>
+        <div class="field"><label>Phone</label><input id="${formId}-custphone" placeholder="+1 000 000 0000"></div>
+      </div>
+    </div>
+  </div>`;
+}
+
+function lineBlock(formId, hasPricing=true) {
+  return `
+  <div class="form-card">
+    <div class="form-card-header"><h3>📦 Line Items</h3></div>
+    <div class="form-card-body">
+      <div id="lines-${formId}"></div>
+    </div>
+  </div>`;
+}
+
+function pricingBlock(formId) {
+  return `
+  <div class="form-card">
+    <div class="form-card-header"><h3>💲 Pricing & Terms</h3></div>
+    <div class="form-card-body">
+      <div class="grid-3">
+        <div class="field"><label>Discount %</label><input type="number" id="disc-${formId}" value="0" min="0" max="100" step="0.1" oninput="recalc('${formId}')"></div>
+        <div class="field"><label>Shipping (USD)</label><input type="number" id="ship-${formId}" value="0" min="0" step="0.01" oninput="recalc('${formId}')"></div>
+        <div class="field"><label>Tax %</label><input type="number" id="tax-${formId}" value="0" min="0" step="0.1" oninput="recalc('${formId}')"></div>
+        <div class="field"><label>Payment Terms</label><input id="terms-${formId}" value="Net 30"></div>
+        <div class="field"><label>Currency</label><input id="currency-${formId}" value="USD"></div>
+        <div class="field"><label>Incoterms</label><select id="inco-${formId}"><option value="">—</option><option>EXW</option><option>FCA</option><option>FOB</option><option>CIF</option><option>DAP</option><option>DDP</option></select></div>
+      </div>
+    </div>
+  </div>`;
+}
+
+function notesBlock(formId) {
+  return `
+  <div class="form-card">
+    <div class="form-card-header"><h3>📝 Notes</h3></div>
+    <div class="form-card-body">
+      <div class="field"><label>Notes / Special Instructions</label><textarea id="notes-${formId}" rows="3" placeholder="Additional notes, delivery instructions, etc."></textarea></div>
+    </div>
+  </div>`;
+}
+
+function shippingBlock(formId) {
+  return `
+  <div class="form-card">
+    <div class="form-card-header"><h3>🚢 Shipping Info</h3></div>
+    <div class="form-card-body">
+      <div class="grid-2">
+        <div class="field"><label>Port of Loading</label><input id="${formId}-pol" placeholder="e.g. Boston, MA, USA"></div>
+        <div class="field"><label>Port of Discharge</label><input id="${formId}-pod" placeholder="e.g. Shanghai, China"></div>
+        <div class="field"><label>Shipment Date</label><input type="date" id="${formId}-shipdate"></div>
+        <div class="field"><label>Carrier / Vessel</label><input id="${formId}-carrier" placeholder="Carrier name"></div>
+        <div class="field"><label>Bill of Lading / AWB No.</label><input id="${formId}-blno" placeholder="BL/AWB number"></div>
+        <div class="field"><label>Container / Tracking No.</label><input id="${formId}-trackno" placeholder="Container or tracking number"></div>
+      </div>
+    </div>
+  </div>`;
+}
+
+// ══════════════════════════════════════════════
+// INIT FORMS
+// ══════════════════════════════════════════════
+function initForms() {
+  // QT
+  document.getElementById('form-qt').innerHTML =
+    commonHeader('qt') + customerBlock('qt') + lineBlock('qt') + pricingBlock('qt') + notesBlock('qt');
+  initLines('qt', true);
+
+  // PF
+  document.getElementById('form-pf').innerHTML =
+    commonHeader('pf') + customerBlock('pf') + shippingBlock('pf') + lineBlock('pf') + pricingBlock('pf') + notesBlock('pf');
+  initLines('pf', true);
+
+  // INV
+  document.getElementById('form-inv').innerHTML =
+    commonHeader('inv') + customerBlock('inv') + lineBlock('inv') + pricingBlock('inv') + `
+  <div class="form-card">
+    <div class="form-card-header"><h3>🏦 Banking Details (shown on invoice)</h3></div>
+    <div class="form-card-body">
+      <div class="grid-3">
+        <div class="field"><label>Bank</label><input id="inv-bank" value="${CO.bank}"></div>
+        <div class="field"><label>Account Name</label><input id="inv-accname" value="${CO.acctName}"></div>
+        <div class="field"><label>Account Number</label><input id="inv-accnum" value="${CO.acctNum}"></div>
+        <div class="field"><label>ACH Routing</label><input id="inv-ach" value="${CO.achRouting}"></div>
+        <div class="field"><label>Wire Routing</label><input id="inv-wire" value="${CO.wireRouting}"></div>
+        <div class="field"><label>SWIFT</label><input id="inv-swift" value="${CO.swift}"></div>
+      </div>
+    </div>
+  </div>` + notesBlock('inv');
+  initLines('inv', true);
+
+  // SO
+  document.getElementById('form-so').innerHTML =
+    commonHeader('so') + `
+  <div class="form-card">
+    <div class="form-card-header"><h3>📬 Customer PO Reference</h3></div>
+    <div class="form-card-body">
+      <div class="grid-3">
+        <div class="field"><label>Customer PO Number</label><input id="so-pono" placeholder="Customer's PO #"></div>
+        <div class="field"><label>PO Date</label><input type="date" id="so-podate"></div>
+        <div class="field"><label>Ship-To (if different)</label><input id="so-shipto" placeholder="Ship-to company"></div>
+      </div>
+    </div>
+  </div>` + customerBlock('so') + lineBlock('so') + pricingBlock('so') + notesBlock('so');
+  initLines('so', true);
+
+  // CI
+  document.getElementById('form-ci').innerHTML =
+    commonHeader('ci') + customerBlock('ci') + shippingBlock('ci') + `
+  <div class="form-card">
+    <div class="form-card-header"><h3>🌍 Export Details</h3></div>
+    <div class="form-card-body">
+      <div class="grid-3">
+        <div class="field"><label>Country of Origin</label><input id="ci-coo" value="United States of America"></div>
+        <div class="field"><label>Final Destination</label><input id="ci-dest" placeholder="Country"></div>
+        <div class="field"><label>Export License No.</label><input id="ci-explic" placeholder="If applicable"></div>
+        <div class="field"><label>Reason for Export</label><input id="ci-reason" value="Sale"></div>
+        <div class="field"><label>EIN / Tax ID</label><input id="ci-ein" value="${CO.ein}"></div>
+      </div>
+    </div>
+  </div>` + lineBlock('ci') + pricingBlock('ci') + notesBlock('ci');
+  initLines('ci', true);
+
+  // PL
+  document.getElementById('form-pl').innerHTML =
+    commonHeader('pl') + customerBlock('pl') + shippingBlock('pl') + `
+  <div class="form-card">
+    <div class="form-card-header"><h3>📦 Line Items & Package Details</h3></div>
+    <div class="form-card-body">
+      <div id="lines-pl"></div>
+    </div>
+  </div>
+  <div class="form-card">
+    <div class="form-card-header"><h3>⚖️ Shipment Totals</h3></div>
+    <div class="form-card-body">
+      <div class="grid-3">
+        <div class="field"><label>Total Packages</label><input type="number" id="pl-totpkg" placeholder="0"></div>
+        <div class="field"><label>Total Net Weight (kg)</label><input type="number" id="pl-totnw" step="0.01" placeholder="0.00"></div>
+        <div class="field"><label>Total Gross Weight (kg)</label><input type="number" id="pl-totgw" step="0.01" placeholder="0.00"></div>
+        <div class="field"><label>Total Volume (CBM)</label><input type="number" id="pl-totvol" step="0.001" placeholder="0.000"></div>
+        <div class="field"><label>Packaging Type</label><input id="pl-pkgtype" placeholder="Cartons / Pallets / etc."></div>
+        <div class="field"><label>Marks & Numbers</label><input id="pl-marks" placeholder="Shipping marks"></div>
+      </div>
+    </div>
+  </div>` + notesBlock('pl');
+  lineData['pl'] = [newLine(false)];
+  renderLines('pl', false);
+
+  // COO
+  document.getElementById('form-coo').innerHTML =
+    commonHeader('coo') + `
+  <div class="form-card">
+    <div class="form-card-header"><h3>🏢 Exporter (Seller)</h3></div>
+    <div class="form-card-body">
+      <div class="grid-2">
+        <div class="field"><label>Exporter Name</label><input id="coo-expname" value="${CO.name}"></div>
+        <div class="field"><label>EIN</label><input id="coo-ein" value="${CO.ein}"></div>
+        <div class="field span-2"><label>Exporter Address</label><textarea id="coo-expaddr" rows="2">${CO.address}</textarea></div>
+      </div>
+    </div>
+  </div>
+  <div class="form-card">
+    <div class="form-card-header"><h3>👤 Importer (Consignee)</h3></div>
+    <div class="form-card-body">
+      <div class="grid-2">
+        <div class="field"><label>Consignee Name</label><input id="coo-impname" placeholder="Importer / Consignee"></div>
+        <div class="field span-2"><label>Consignee Address</label><textarea id="coo-impaddr" rows="2" placeholder="Full address"></textarea></div>
+      </div>
+    </div>
+  </div>
+  <div class="form-card">
+    <div class="form-card-header"><h3>🚢 Transport & Origin</h3></div>
+    <div class="form-card-body">
+      <div class="grid-3">
+        <div class="field"><label>Country of Origin</label><input id="coo-country" value="United States of America"></div>
+        <div class="field"><label>Country of Destination</label><input id="coo-dest" placeholder="Country"></div>
+        <div class="field"><label>Transport Mode</label><select id="coo-transport"><option>Air</option><option>Sea</option><option>Road</option><option>Courier</option><option>Other</option></select></div>
+        <div class="field"><label>Invoice Reference</label><input id="coo-invoiceref" placeholder="INV-2025-XXXX"></div>
+        <div class="field"><label>Shipment Date</label><input type="date" id="coo-shipdate"></div>
+        <div class="field"><label>Port of Loading</label><input id="coo-pol" placeholder="Boston, MA, USA"></div>
+      </div>
+    </div>
+  </div>
+  <div class="form-card">
+    <div class="form-card-header"><h3>📦 Goods Description</h3></div>
+    <div class="form-card-body">
+      <div class="grid-2">
+        <div class="field span-2"><label>Description of Goods</label><textarea id="coo-goods" rows="4" placeholder="Full description of goods, HS codes, quantities..."></textarea></div>
+        <div class="field"><label>Total Net Weight (kg)</label><input type="number" id="coo-nw" step="0.01"></div>
+        <div class="field"><label>Total Gross Weight (kg)</label><input type="number" id="coo-gw" step="0.01"></div>
+        <div class="field"><label>No. of Packages</label><input type="number" id="coo-pkg"></div>
+        <div class="field"><label>Total Value (USD)</label><input type="number" id="coo-val" step="0.01"></div>
+      </div>
+    </div>
+  </div>
+  <div class="form-card">
+    <div class="form-card-header"><h3>✍️ Declaration</h3></div>
+    <div class="form-card-body">
+      <div class="grid-2">
+        <div class="field"><label>Signatory Name</label><input id="coo-signame" placeholder="Authorized signatory"></div>
+        <div class="field"><label>Title</label><input id="coo-sigtitle" placeholder="e.g. Director of Operations"></div>
+        <div class="field span-2"><label>Declaration Statement</label><textarea id="coo-decl" rows="2">I, the undersigned, hereby declare that the above details and statements are correct and that all goods were produced or manufactured in the United States of America.</textarea></div>
+      </div>
+    </div>
+  </div>` + notesBlock('coo');
+}
+
+function clearForm(formId) {
+  document.querySelectorAll(`#form-${formId} input, #form-${formId} textarea, #form-${formId} select`).forEach(el => {
+    if (el.type === 'date') el.value = todayISO();
+    else if (el.tagName === 'SELECT') el.selectedIndex = 0;
+    else el.value = '';
+  });
+  if (lineData[formId]) { lineData[formId] = [newLine()]; renderLines(formId, formId !== 'pl'); }
+}
+
+// ══════════════════════════════════════════════
+// PDF GENERATION
+// ══════════════════════════════════════════════
+function v(id) { const el = document.getElementById(id); return el ? el.value : ''; }
+
+function pdfHeader(doc, title, docNum, date) {
+  // Blue header bar
+  doc.setFillColor(26, 63, 212);
+  doc.rect(0, 0, 210, 32, 'F');
+
+  // Company name
+  doc.setTextColor(255,255,255);
+  doc.setFontSize(20);
+  doc.setFont('helvetica','bold');
+  doc.text('alera medtech', 14, 14);
+
+  doc.setFontSize(8);
+  doc.setFont('helvetica','normal');
+  doc.text('LLC', 14, 20);
+  doc.text(CO.address.split('\n').join(' | '), 14, 26);
+  doc.text(`${CO.phone}  |  ${CO.email}  |  ${CO.web}`, 14, 30);
+
+  // Document title top-right
+  doc.setFontSize(16);
+  doc.setFont('helvetica','bold');
+  doc.text(title.toUpperCase(), 196, 14, {align:'right'});
+  doc.setFontSize(9);
+  doc.setFont('helvetica','normal');
+  doc.text(docNum, 196, 21, {align:'right'});
+  doc.text(date, 196, 27, {align:'right'});
+
+  doc.setTextColor(0,0,0);
+}
+
+function pdfBillTo(doc, y, label, name, contact, addr, email, phone) {
+  doc.setFillColor(240,244,252);
+  doc.rect(14, y, 85, 40, 'F');
+  doc.setFontSize(8);
+  doc.setFont('helvetica','bold');
+  doc.setTextColor(26,63,212);
+  doc.text(label, 18, y+7);
+  doc.setTextColor(0,0,0);
+  doc.setFont('helvetica','bold');
+  doc.setFontSize(10);
+  doc.text(name||'—', 18, y+14);
+  doc.setFont('helvetica','normal');
+  doc.setFontSize(8.5);
+  let yy = y+20;
+  if (contact) { doc.text(contact, 18, yy); yy+=5; }
+  const addrLines = (addr||'').split('\n');
+  addrLines.forEach(l => { if(l.trim()) { doc.text(l, 18, yy); yy+=4.5; } });
+  if (email) doc.text(email, 18, yy);
+  doc.setTextColor(0,0,0);
+  return y+46;
+}
+
+function pdfLineTable(doc, y, lines, hasPricing, formId) {
+  const isPL = formId === 'pl';
+  let head, body, cols;
+  if (isPL) {
+    head = [['Description','HS Code','Qty','Unit','Net Wt (kg)','Gross Wt (kg)','Dims','Boxes']];
+    body = lines.map(l => [l.desc,l.hscode||'',l.qty,l.unit,l.netWeight,l.grossWeight,l.dims||'',l.boxCount]);
+    cols = [{header:'Description',dataKey:'desc'}];
+  } else if (hasPricing) {
+    head = [['#','Description','Qty','Unit','Unit Price (USD)','Amount (USD)']];
+    body = lines.map((l,i) => [i+1, l.desc, l.qty, l.unit, fmtN(l.unitPrice), fmtN(l.qty*l.unitPrice)]);
+  } else {
+    head = [['#','Description','Qty','Unit']];
+    body = lines.map((l,i) => [i+1, l.desc, l.qty, l.unit]);
+  }
+
+  doc.autoTable({
+    startY: y,
+    head: isPL ? [['Description','HS Code','Qty','Unit','Net Wt','Gross Wt','Dims (cm)','Boxes']] : head,
+    body: isPL ? lines.map(l => [l.desc,l.hscode||'',l.qty,l.unit,l.netWeight||'',l.grossWeight||'',l.dims||'',l.boxCount||'']) : body,
+    theme: 'striped',
+    headStyles: { fillColor: [26,63,212], textColor: 255, fontSize: 8, fontStyle:'bold', halign:'center' },
+    bodyStyles: { fontSize: 8.5 },
+    columnStyles: hasPricing && !isPL ? {
+      0:{cellWidth:10,halign:'center'},
+      1:{cellWidth:70},
+      2:{cellWidth:20,halign:'center'},
+      3:{cellWidth:20,halign:'center'},
+      4:{cellWidth:35,halign:'right'},
+      5:{cellWidth:35,halign:'right'},
+    } : {},
+    margin:{left:14,right:14},
+    styles:{cellPadding:3},
+  });
+  return doc.lastAutoTable.finalY;
+}
+
+function pdfTotals(doc, y, formId) {
+  const lines = lineData[formId];
+  const subtotal = lines.reduce((s,l) => s + l.qty*l.unitPrice, 0);
+  const disc = parseFloat(v('disc-'+formId)||0);
+  const ship = parseFloat(v('ship-'+formId)||0);
+  const tax = parseFloat(v('tax-'+formId)||0);
+  const discAmt = subtotal*(disc/100);
+  const taxAmt = (subtotal-discAmt)*(tax/100);
+  const total = subtotal - discAmt + ship + taxAmt;
+
+  const x = 130; const w = 66;
+  y += 4;
+  doc.setFontSize(8.5);
+
+  const rows = [
+    ['Subtotal', fmt(subtotal)],
+    ...(disc>0?[[`Discount (${disc}%)`, `-${fmt(discAmt)}`]]:[]),
+    ...(ship>0?[['Shipping', fmt(ship)]]:[]),
+    ...(tax>0?[[`Tax (${tax}%)`, fmt(taxAmt)]]:[]),
+  ];
+  rows.forEach(([label,val]) => {
+    doc.setFont('helvetica','normal');
+    doc.setTextColor(90,100,115);
+    doc.text(label, x+w-40, y, {align:'right'});
+    doc.setTextColor(0,0,0);
+    doc.text(val, x+w, y, {align:'right'});
+    y+=5;
+  });
+  // total line
+  doc.setFillColor(26,63,212);
+  doc.rect(x-4, y+1, w+4, 8, 'F');
+  doc.setTextColor(255,255,255);
+  doc.setFont('helvetica','bold');
+  doc.setFontSize(10);
+  doc.text('TOTAL USD', x+w-45, y+6.5, {align:'right'});
+  doc.text(fmt(total), x+w, y+6.5, {align:'right'});
+  doc.setTextColor(0,0,0);
+  return y+14;
+}
+
+function pdfTerms(doc, y, terms, inco, notes) {
+  y += 4;
+  doc.setFontSize(8);
+  doc.setFont('helvetica','bold');
+  doc.setTextColor(26,63,212);
+  doc.text('PAYMENT TERMS', 14, y);
+  doc.setFont('helvetica','normal');
+  doc.setTextColor(0,0,0);
+  doc.text(terms||'Net 30', 55, y);
+  if (inco) { doc.setFont('helvetica','bold'); doc.setTextColor(26,63,212); doc.text('INCOTERMS', 110, y); doc.setFont('helvetica','normal'); doc.setTextColor(0,0,0); doc.text(inco, 145, y); }
+  if (notes) {
+    y+=6;
+    doc.setFont('helvetica','bold'); doc.setTextColor(26,63,212); doc.text('NOTES', 14, y);
+    doc.setFont('helvetica','normal'); doc.setTextColor(0,0,0);
+    const lines = doc.splitTextToSize(notes, 170);
+    doc.text(lines, 14, y+5);
+    y += lines.length*4.5 + 5;
+  }
+  return y;
+}
+
+function pdfFooter(doc) {
+  const py = doc.internal.pageSize.height - 10;
+  doc.setFontSize(7.5);
+  doc.setTextColor(140,150,165);
+  doc.setFont('helvetica','normal');
+  doc.text(`${CO.name}  ·  EIN: ${CO.ein}  ·  ${CO.phone}  ·  ${CO.email}  ·  ${CO.web}`, 105, py, {align:'center'});
+}
+
+// ══════════════════════════════════════════════
+// GENERATE PDF PER TYPE
+// ══════════════════════════════════════════════
+async function generatePDF(type) {
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ unit:'mm', format:'a4' });
+  const docNum = v(`${type}-docnum`) || nextDocNum(type);
+  const date = v(`${type}-date`) ? new Date(v(`${type}-date`)).toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric'}) : today();
+
+  const titles = { qt:'Quotation', pf:'Pro Forma Invoice', inv:'Invoice', so:'Sales Order', ci:'Commercial Invoice', pl:'Packing List', coo:'Certificate of Origin' };
+  const title = titles[type];
+
+  if (type === 'coo') {
+    generateCOO(doc, docNum, date);
+  } else if (type === 'pl') {
+    generatePL(doc, docNum, date, title);
+  } else {
+    pdfHeader(doc, title, docNum, date);
+    let y = 38;
+
+    // Seller info block
+    doc.setFillColor(248,250,255);
+    doc.rect(110, 36, 86, 34, 'F');
+    doc.setFontSize(8);
+    doc.setFont('helvetica','bold');
+    doc.setTextColor(26,63,212);
+    doc.text('FROM', 114, 43);
+    doc.setFont('helvetica','normal');
+    doc.setTextColor(0,0,0);
+    doc.setFontSize(8.5);
+    doc.text(CO.name, 114, 49);
+    doc.text(CO.address.replace(/\n/g,', '), 114, 54, {maxWidth:80});
+    doc.text(CO.email, 114, 62);
+    doc.text(CO.phone, 114, 67);
+
+    y = pdfBillTo(doc, y, 'BILL TO / SHIP TO', v(`${type}-custname`), v(`${type}-custcontact`), v(`${type}-custaddr`), v(`${type}-custemail`), v(`${type}-custphone`));
+
+    // Extra fields per type
+    if (type === 'so') {
+      doc.setFontSize(8.5);
+      doc.setFont('helvetica','bold'); doc.setTextColor(26,63,212);
+      doc.text('CUSTOMER PO:', 14, y); doc.setFont('helvetica','normal'); doc.setTextColor(0,0,0);
+      doc.text(v('so-pono')||'—', 48, y);
+      y += 5;
+    }
+    if (['pf','ci'].includes(type)) {
+      const pol = v(`${type}-pol`); const pod = v(`${type}-pod`); const carrier = v(`${type}-carrier`);
+      if (pol||pod||carrier) {
+        doc.setFontSize(8); doc.setTextColor(26,63,212); doc.setFont('helvetica','bold');
+        const shipInfo = [pol&&`POL: ${pol}`, pod&&`POD: ${pod}`, carrier&&`Carrier: ${carrier}`].filter(Boolean).join('   ');
+        doc.text(shipInfo, 14, y);
+        doc.setTextColor(0,0,0); doc.setFont('helvetica','normal');
+        y += 5;
+      }
+    }
+    if (type === 'ci') {
+      const coo = v('ci-coo'); const reason = v('ci-reason');
+      doc.setFontSize(8); doc.setFont('helvetica','bold'); doc.setTextColor(26,63,212);
+      doc.text(`Country of Origin: `, 14, y); doc.setFont('helvetica','normal'); doc.setTextColor(0,0,0); doc.text(coo, 55, y);
+      if (reason) { doc.setFont('helvetica','bold'); doc.setTextColor(26,63,212); doc.text('Reason for Export:', 110, y); doc.setFont('helvetica','normal'); doc.setTextColor(0,0,0); doc.text(reason, 150, y); }
+      y += 7;
+    }
+
+    y = pdfLineTable(doc, y, lineData[type], true, type);
+
+    if (type !== 'so' || true) y = pdfTotals(doc, y, type);
+    y = pdfTerms(doc, y, v(`terms-${type}`), v(`inco-${type}`), v(`notes-${type}`));
+
+    // Banking for invoice
+    if (type === 'inv') {
+      y += 4;
+      doc.setFillColor(240,244,252);
+      doc.rect(14, y, 182, 26, 'F');
+      doc.setFontSize(8);
+      doc.setFont('helvetica','bold'); doc.setTextColor(26,63,212); doc.text('PAYMENT INFORMATION', 18, y+6);
+      doc.setFont('helvetica','normal'); doc.setTextColor(0,0,0);
+      doc.text(`Bank: ${v('inv-bank')}`, 18, y+12);
+      doc.text(`Account Name: ${v('inv-accname')}`, 18, y+17);
+      doc.text(`Account No: ${v('inv-accnum')}`, 18, y+22);
+      doc.text(`ACH Routing: ${v('inv-ach')}`, 100, y+12);
+      doc.text(`Wire Routing: ${v('inv-wire')}`, 100, y+17);
+      doc.text(`SWIFT: ${v('inv-swift')}`, 100, y+22);
+    }
+
+    pdfFooter(doc);
+  }
+
+  doc.save(`${docNum}.pdf`);
+  addHistory(docNum, type, v(`${type}-custname`)||'—', lineData[type]?.reduce((s,l)=>s+l.qty*l.unitPrice,0)||0, date);
+  toast(`✅ ${title} ${docNum} downloaded`);
+}
+
+function generatePL(doc, docNum, date, title) {
+  pdfHeader(doc, title, docNum, date);
+  let y = 38;
+  y = pdfBillTo(doc, y, 'CONSIGNEE', v('pl-custname'), v('pl-custcontact'), v('pl-custaddr'), v('pl-custemail'), v('pl-custphone'));
+
+  // Shipping row
+  const pol = v('pl-pol'); const pod = v('pl-pod'); const bl = v('pl-blno'); const carrier = v('pl-carrier');
+  if (pol||pod||bl||carrier) {
+    doc.setFontSize(8); doc.setFont('helvetica','bold'); doc.setTextColor(26,63,212);
+    const si = [pol&&`POL: ${pol}`, pod&&`POD: ${pod}`, carrier&&`Carrier: ${carrier}`, bl&&`BL/AWB: ${bl}`].filter(Boolean).join('   ');
+    doc.text(si, 14, y); doc.setTextColor(0,0,0); doc.setFont('helvetica','normal'); y+=6;
+  }
+
+  y = pdfLineTable(doc, y, lineData['pl'], false, 'pl');
+  y += 6;
+
+  // Totals box
+  doc.setFillColor(240,244,252);
+  doc.rect(14, y, 182, 22, 'F');
+  doc.setFontSize(8.5); doc.setFont('helvetica','bold'); doc.setTextColor(26,63,212);
+  doc.text('SHIPMENT SUMMARY', 18, y+7);
+  doc.setFont('helvetica','normal'); doc.setTextColor(0,0,0);
+  const row = [`Total Pkgs: ${v('pl-totpkg')||'—'}`, `Net Wt: ${v('pl-totnw')||'—'} kg`, `Gross Wt: ${v('pl-totgw')||'—'} kg`, `Volume: ${v('pl-totvol')||'—'} CBM`, `Pkg Type: ${v('pl-pkgtype')||'—'}`];
+  doc.text(row.join('   '), 18, y+13);
+  if (v('pl-marks')) { doc.setFont('helvetica','bold'); doc.text('Marks: ', 18, y+19); doc.setFont('helvetica','normal'); doc.text(v('pl-marks'), 35, y+19); }
+  y += 26;
+  if (v('notes-pl')) { doc.setFontSize(8); doc.setFont('helvetica','bold'); doc.setTextColor(26,63,212); doc.text('NOTES', 14, y); doc.setFont('helvetica','normal'); doc.setTextColor(0,0,0); doc.text(v('notes-pl'), 30, y); }
+  pdfFooter(doc);
+}
+
+function generateCOO(doc, docNum, date) {
+  pdfHeader(doc, 'Certificate of Origin', docNum, date);
+  let y = 38;
+
+  // Exporter block
+  doc.setFillColor(240,244,252);
+  doc.rect(14, y, 85, 32, 'F');
+  doc.setFontSize(8); doc.setFont('helvetica','bold'); doc.setTextColor(26,63,212);
+  doc.text('EXPORTER / SELLER', 18, y+7);
+  doc.setFont('helvetica','bold'); doc.setFontSize(9); doc.setTextColor(0,0,0);
+  doc.text(v('coo-expname')||CO.name, 18, y+13);
+  doc.setFont('helvetica','normal'); doc.setFontSize(8);
+  doc.text((v('coo-expaddr')||CO.address).replace(/\n/g,', '), 18, y+18, {maxWidth:78});
+  doc.text(`EIN: ${v('coo-ein')||CO.ein}`, 18, y+27);
+
+  // Importer block
+  doc.setFillColor(248,250,255);
+  doc.rect(104, y, 92, 32, 'F');
+  doc.setFontSize(8); doc.setFont('helvetica','bold'); doc.setTextColor(26,63,212);
+  doc.text('IMPORTER / CONSIGNEE', 108, y+7);
+  doc.setFont('helvetica','bold'); doc.setFontSize(9); doc.setTextColor(0,0,0);
+  doc.text(v('coo-impname')||'—', 108, y+13);
+  doc.setFont('helvetica','normal'); doc.setFontSize(8);
+  doc.text((v('coo-impaddr')||'').replace(/\n/g,', '), 108, y+18, {maxWidth:84});
+  y += 38;
+
+  // Transport row
+  doc.setFontSize(8);
+  doc.setFont('helvetica','bold'); doc.setTextColor(26,63,212);
+  const trow = [`Origin: ${v('coo-country')||'USA'}`, `Destination: ${v('coo-dest')||'—'}`, `Transport: ${v('coo-transport')||'—'}`, `POL: ${v('coo-pol')||'—'}`, `Invoice Ref: ${v('coo-invoiceref')||'—'}`].join('   ');
+  doc.setFont('helvetica','normal'); doc.setTextColor(50,50,50);
+  doc.text(trow, 14, y, {maxWidth:182}); y += 8;
+
+  // Goods box
+  doc.setFillColor(240,244,252);
+  doc.rect(14, y, 182, Math.max(30, (v('coo-goods').split('\n').length+1)*5+10), 'F');
+  doc.setFontSize(8); doc.setFont('helvetica','bold'); doc.setTextColor(26,63,212);
+  doc.text('DESCRIPTION OF GOODS', 18, y+7);
+  doc.setFont('helvetica','normal'); doc.setTextColor(0,0,0);
+  const goodsLines = doc.splitTextToSize(v('coo-goods')||'See attached', 174);
+  doc.text(goodsLines, 18, y+13);
+  y += Math.max(30, goodsLines.length*4.5+14);
+
+  // Weights row
+  y += 4;
+  doc.setFontSize(8);
+  const wrow = [`Packages: ${v('coo-pkg')||'—'}`, `Net Weight: ${v('coo-nw')||'—'} kg`, `Gross Weight: ${v('coo-gw')||'—'} kg`, `Total Value: USD ${v('coo-val')||'—'}`].join('     ');
+  doc.setFont('helvetica','normal'); doc.setTextColor(50,50,50);
+  doc.text(wrow, 14, y); y += 8;
+
+  // Declaration
+  doc.setFillColor(255,251,235);
+  doc.rect(14, y, 182, 22, 'F');
+  doc.setFontSize(8); doc.setFont('helvetica','bold'); doc.setTextColor(26,63,212);
+  doc.text('DECLARATION', 18, y+7);
+  doc.setFont('helvetica','normal'); doc.setTextColor(0,0,0);
+  const declLines = doc.splitTextToSize(v('coo-decl'), 174);
+  doc.text(declLines, 18, y+13);
+  y += 28;
+
+  // Signature area
+  doc.setDrawColor(26,63,212); doc.setLineWidth(.5);
+  doc.line(14, y+18, 90, y+18);
+  doc.line(104, y+18, 180, y+18);
+  doc.setFontSize(8); doc.setTextColor(90,90,90);
+  doc.text('Authorized Signature', 14, y+22);
+  doc.text(`${v('coo-signame')||'___________________'}  |  ${v('coo-sigtitle')||'___________________'}`, 104, y+22);
+  doc.setFontSize(8); doc.text(`Date: ${date}`, 14, y+28);
+
+  if (v('notes-coo')) {
+    y += 34;
+    doc.setFontSize(8); doc.setFont('helvetica','bold'); doc.setTextColor(26,63,212); doc.text('NOTES', 14, y);
+    doc.setFont('helvetica','normal'); doc.setTextColor(0,0,0); doc.text(v('notes-coo'), 30, y);
+  }
+  pdfFooter(doc);
+}
+
+// ══════════════════════════════════════════════
+// HISTORY
+// ══════════════════════════════════════════════
+const BADGES = { qt:'badge-qt', pf:'badge-pf', inv:'badge-inv', so:'badge-so', ci:'badge-ci', pl:'badge-pl', coo:'badge-coo' };
+const LABELS = { qt:'Quotation', pf:'Pro Forma', inv:'Invoice', so:'Sales Order', ci:'Commercial Inv.', pl:'Packing List', coo:'Cert. of Origin' };
+
+function addHistory(docNum, type, customer, amount, date) {
+  docHistory.unshift({ docNum, type, customer, amount, date });
+  const tbody = document.getElementById('history-body');
+  tbody.innerHTML = docHistory.map(d => `
+    <tr>
+      <td style="font-family:'DM Mono',monospace;font-size:13px;font-weight:500">${d.docNum}</td>
+      <td><span class="badge ${BADGES[d.type]}">${LABELS[d.type]}</span></td>
+      <td>${d.customer}</td>
+      <td style="font-family:'DM Mono',monospace">${d.amount>0?fmt(d.amount):'—'}</td>
+      <td style="color:var(--text-muted)">${d.date}</td>
+    </tr>`).join('');
+}
+
+// ══════════════════════════════════════════════
+// TOAST
+// ══════════════════════════════════════════════
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+</script>
+</body>
+</html>
