@@ -1,0 +1,773 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Alera Label Studio — Medical Device Labeling Portal</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{--blue:#1a35e0;--blue-dark:#1128b8;--blue-mid:#2c48f0;--blue-pale:#eaedfd;--blue-pale2:#f4f5fe;--surface:#f3f4f9;--white:#fff;--border:#dde1ef;--border-light:#eef0f8;--text:#0b0f2e;--text2:#4a5175;--text3:#8b90ae;--green:#17b574;--amber:#f59e0b;--red:#ef4444;--r:10px;--rlg:16px;--sh:0 2px 12px rgba(26,53,224,.09),0 1px 3px rgba(0,0,0,.05);--shlg:0 8px 40px rgba(26,53,224,.14),0 2px 8px rgba(0,0,0,.07);}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'DM Sans',sans-serif;background:var(--surface);color:var(--text);min-height:100vh;display:flex;flex-direction:column;font-size:14px;}
+nav{background:var(--white);border-bottom:1.5px solid var(--border);height:58px;display:flex;align-items:center;padding:0 28px;gap:20px;position:sticky;top:0;z-index:200;box-shadow:0 1px 12px rgba(26,53,224,.07);}
+.nlogo{font-size:20px;font-weight:700;color:var(--blue);letter-spacing:-.5px;text-decoration:none;}
+.nsep{width:1px;height:22px;background:var(--border);}
+.napp{font-size:12px;font-weight:600;color:var(--text3);letter-spacing:.06em;text-transform:uppercase;}
+.ntabs{display:flex;gap:2px;margin-left:10px;}
+.ntab{padding:5px 13px;border-radius:7px;font-size:13px;font-weight:500;color:var(--text2);cursor:pointer;border:none;background:none;font-family:inherit;transition:all .15s;}
+.ntab:hover,.ntab.active{background:var(--blue-pale);color:var(--blue);}
+.ntab.active{font-weight:600;}
+.nright{margin-left:auto;display:flex;align-items:center;gap:8px;}
+.chip{background:var(--blue-pale);color:var(--blue);font-size:10.5px;font-weight:700;padding:3px 8px;border-radius:100px;letter-spacing:.03em;}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:7px 15px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;border:none;font-family:inherit;transition:all .15s;white-space:nowrap;}
+.bp{background:var(--blue);color:#fff;}.bp:hover{background:var(--blue-dark);}
+.bs{background:var(--blue-pale);color:var(--blue);}.bs:hover{background:#dde3fc;}
+.bg{background:transparent;color:var(--text2);border:1.5px solid var(--border);}.bg:hover{border-color:var(--blue);color:var(--blue);}
+.bsm{padding:5px 11px;font-size:12px;border-radius:7px;}
+.blg{padding:11px 22px;font-size:14px;}
+.view{display:none;flex:1;}.view.active{display:flex;}
+/* DASH */
+#vdash{flex-direction:column;overflow-y:auto;padding:26px 32px;gap:20px;}
+.hero{background:linear-gradient(130deg,var(--blue) 0%,#3b58f5 55%,#5670ff 100%);border-radius:var(--rlg);padding:32px 38px;color:#fff;display:flex;align-items:center;justify-content:space-between;position:relative;overflow:hidden;}
+.hero::before{content:'';position:absolute;right:-60px;top:-60px;width:280px;height:280px;border-radius:50%;background:rgba(255,255,255,.05);}
+.hero h1{font-size:25px;font-weight:700;letter-spacing:-.4px;margin-bottom:6px;}
+.hero p{font-size:13.5px;opacity:.78;max-width:420px;line-height:1.55;margin-bottom:20px;}
+.hero .btn{background:#fff;color:var(--blue);}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:13px;}
+.stat{background:var(--white);border:1px solid var(--border);border-radius:var(--r);padding:17px 20px;transition:all .2s;}
+.stat:hover{box-shadow:var(--sh);transform:translateY(-2px);}
+.sn{font-size:30px;font-weight:700;letter-spacing:-1px;font-family:'DM Mono',monospace;}
+.sl{font-size:11.5px;color:var(--text3);margin-top:4px;font-weight:500;}
+.ss{font-size:11px;color:var(--green);font-weight:600;margin-top:6px;}
+.dcols{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+.dcard{background:var(--white);border:1px solid var(--border);border-radius:var(--r);}
+.dchead{padding:13px 17px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+.dct{font-size:13.5px;font-weight:700;}
+.dcbody{padding:13px 17px;}
+.rl{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border-light);}
+.rl:last-child{border-bottom:none;}
+.rlt{width:50px;height:30px;border-radius:5px;background:linear-gradient(135deg,var(--blue),var(--blue-mid));display:flex;align-items:center;justify-content:center;color:#fff;font-size:7.5px;font-weight:700;flex-shrink:0;letter-spacing:.04em;}
+.rln{flex:1;font-size:12.5px;font-weight:600;}
+.rlm{font-size:10.5px;color:var(--text3);margin-top:1px;}
+.pill{display:inline-flex;padding:2px 8px;border-radius:100px;font-size:11px;font-weight:700;}
+.pg{background:#dcfce7;color:#16a34a;}.pb{background:var(--blue-pale);color:var(--blue);}.py{background:#fef9c3;color:#b45309;}.pr{background:#fee2e2;color:#dc2626;}
+.rlist{list-style:none;display:flex;flex-direction:column;gap:7px;}
+.rlist li{display:flex;align-items:flex-start;gap:8px;font-size:12px;color:var(--text2);line-height:1.4;}
+.rok{color:var(--green);}.rwarn{color:var(--amber);}
+/* EDITOR */
+#veditor{height:calc(100vh - 58px);overflow:hidden;}
+.ewrap{display:flex;width:100%;height:100%;}
+/* LSB */
+.lsb{width:306px;background:var(--white);border-right:1.5px solid var(--border);display:flex;flex-direction:column;flex-shrink:0;}
+.lsbh{padding:13px 15px 11px;border-bottom:1px solid var(--border);}
+.lsbs{flex:1;overflow-y:auto;padding:12px 15px;}
+.lsbs::-webkit-scrollbar{width:4px;}.lsbs::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px;}
+.lsbf{padding:12px 15px;border-top:1px solid var(--border);display:flex;gap:7px;}
+/* Form */
+.fg{margin-bottom:10px;}
+.fl{display:flex;align-items:center;gap:5px;font-size:11.5px;font-weight:600;color:var(--text2);margin-bottom:4px;}
+.req{background:#fff4e0;color:#b86000;font-size:9px;font-weight:700;padding:1px 5px;border-radius:3px;}
+.opt{background:#e8f5e9;color:#2e7d32;font-size:9px;font-weight:700;padding:1px 5px;border-radius:3px;}
+input,select,textarea{width:100%;padding:7px 10px;border:1.5px solid var(--border);border-radius:7px;font-size:12.5px;font-family:inherit;color:var(--text);background:var(--surface);transition:all .15s;outline:none;}
+input:focus,select:focus,textarea:focus{border-color:var(--blue);background:#fff;box-shadow:0 0 0 3px rgba(26,53,224,.08);}
+textarea{resize:vertical;min-height:46px;}
+.tr{display:flex;align-items:center;justify-content:space-between;padding:6px 0;}
+.trl{font-size:12px;font-weight:500;color:var(--text2);}
+.tog{position:relative;width:34px;height:19px;flex-shrink:0;}
+.tog input{opacity:0;width:0;height:0;}
+.togs{position:absolute;inset:0;background:#d1d5e0;border-radius:100px;cursor:pointer;transition:.2s;}
+.togs:before{content:'';position:absolute;left:3px;top:3px;width:13px;height:13px;border-radius:50%;background:#fff;transition:.2s;}
+.tog input:checked+.togs{background:var(--blue);}
+.tog input:checked+.togs:before{transform:translateX(15px);}
+.sec{display:flex;align-items:center;gap:7px;margin:16px 0 9px;}
+.secl{width:19px;height:19px;border-radius:4px;background:var(--blue);color:#fff;font-size:9.5px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.sect{font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--text3);}
+.secln{flex:1;height:1px;background:var(--border-light);}
+.r2{display:grid;grid-template-columns:1fr 1fr;gap:7px;}
+.r3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px;}
+/* Symbols */
+.symg{display:grid;grid-template-columns:repeat(6,1fr);gap:4px;}
+.symb{aspect-ratio:1;border:1.5px solid var(--border);border-radius:6px;background:var(--surface);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:13px;transition:all .15s;position:relative;}
+.symb:hover,.symb.on{border-color:var(--blue);background:var(--blue-pale);}
+.symt{display:none;position:absolute;bottom:calc(100% + 4px);left:50%;transform:translateX(-50%);background:var(--text);color:#fff;padding:2px 6px;border-radius:4px;font-size:9px;white-space:nowrap;pointer-events:none;z-index:50;font-family:'DM Sans',sans-serif;}
+.symb:hover .symt{display:block;}
+/* CANVAS */
+.cc{flex:1;display:flex;flex-direction:column;overflow:hidden;background:#e2e5f0;}
+.ctb{background:var(--white);border-bottom:1.5px solid var(--border);padding:7px 18px;display:flex;align-items:center;gap:7px;flex-shrink:0;}
+.tbg{display:flex;align-items:center;gap:5px;padding:0 9px;border-right:1px solid var(--border);}
+.tbg:first-child{padding-left:0;}.tbg:last-child{border-right:none;}
+.tbl{font-size:9.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--text3);margin-right:2px;}
+.zn{font-family:'DM Mono',monospace;font-size:12px;color:var(--text2);min-width:38px;text-align:center;}
+.cs{flex:1;overflow:auto;display:flex;align-items:flex-start;justify-content:center;padding:32px;}
+.cs::-webkit-scrollbar{width:7px;height:7px;}.cs::-webkit-scrollbar-thumb{background:#c0c4d8;border-radius:4px;}
+/* LABEL */
+.lwrap{display:flex;flex-direction:column;align-items:center;gap:12px;}
+.lshadow{filter:drop-shadow(0 6px 28px rgba(0,0,0,.22)) drop-shadow(0 2px 6px rgba(0,0,0,.1));}
+.label{background:#fff;border:1px solid #c5cade;position:relative;display:grid;grid-template-rows:auto 1fr auto;transition:all .3s;}
+.label.ssz{width:680px;height:440px;}.label.smz{width:460px;height:305px;}.label.slz{width:900px;height:580px;}
+/* Label Header */
+.lhdr{background:var(--blue);padding:12px 20px;display:flex;align-items:center;justify-content:space-between;}
+.lbrand{font-size:21px;font-weight:700;color:#fff;letter-spacing:-.5px;line-height:1;}
+.lpname{color:rgba(255,255,255,.7);font-size:11.5px;font-weight:500;margin-left:11px;align-self:flex-end;padding-bottom:1px;}
+.lhdrr{display:flex;flex-direction:column;align-items:flex-end;gap:3px;}
+.lrefl{font-size:9.5px;font-family:'DM Mono',monospace;color:rgba(255,255,255,.6);}
+.lrefl span{color:#fff;font-weight:500;}
+/* Label body */
+.lbody{display:grid;grid-template-columns:1fr 170px;overflow:hidden;}
+.lmain{padding:12px 18px;display:flex;flex-direction:column;gap:8px;overflow:hidden;}
+.lf{display:flex;flex-direction:column;gap:2px;}
+.lfl{font-size:7.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#8a90b4;}
+.lfv{font-size:12px;font-weight:600;color:var(--text);line-height:1.3;}
+.lfv.mn{font-family:'DM Mono',monospace;font-size:11px;}
+.lfv.sm{font-size:10.5px;font-weight:500;color:var(--text2);}
+.lfv.ex{color:#c03000;font-family:'DM Mono',monospace;font-size:11px;}
+.lr{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;}
+.lr2{display:grid;grid-template-columns:1fr 1fr;gap:9px;}
+.lcau{background:#fffbf0;border:1px solid #fde68a;border-radius:4px;padding:4px 7px;font-size:9px;font-weight:600;color:#92400e;line-height:1.4;}
+.lstag{background:var(--blue);color:#fff;font-size:8px;font-weight:700;padding:2px 6px;border-radius:3px;letter-spacing:.1em;display:inline-flex;align-items:center;gap:3px;}
+/* Right bar */
+.lrbar{border-left:1px solid #e0e3f0;background:#fafbff;padding:11px 11px;display:flex;flex-direction:column;gap:9px;align-items:center;}
+.lbc{display:flex;flex-direction:column;align-items:center;gap:4px;width:100%;}
+.lbcl{font-size:7px;font-family:'DM Mono',monospace;color:var(--text3);text-align:center;letter-spacing:.05em;}
+.lqr{width:46px;height:46px;border:1px solid #e0e3f0;border-radius:4px;display:flex;align-items:center;justify-content:center;background:#fff;}
+.lsyms{display:flex;flex-wrap:wrap;gap:3px;justify-content:center;padding-top:7px;border-top:1px solid #e0e3f0;width:100%;}
+.lsym{font-size:15px;}
+.lifu{font-size:7.5px;font-weight:700;color:var(--blue);text-align:center;border:1px solid var(--blue);border-radius:3px;padding:2px 5px;width:100%;}
+/* Footer */
+.lftr{background:#f0f2fb;border-top:1px solid #dde0f0;padding:6px 18px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:4px;}
+.lftrf{display:flex;align-items:center;gap:5px;font-size:9px;font-family:'DM Mono',monospace;color:var(--text2);}
+.lftrk{font-size:7px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text3);font-family:'DM Sans',sans-serif;}
+.lstripe{height:3px;background:var(--blue);}
+/* RIGHT PANEL */
+.rp{width:252px;background:var(--white);border-left:1.5px solid var(--border);display:flex;flex-direction:column;flex-shrink:0;}
+.rptabs{display:flex;border-bottom:1.5px solid var(--border);}
+.rptab{flex:1;padding:10px 5px;font-size:11px;font-weight:600;text-align:center;cursor:pointer;color:var(--text3);border:none;background:none;font-family:inherit;border-bottom:2.5px solid transparent;margin-bottom:-1.5px;transition:all .15s;}
+.rptab.active{color:var(--blue);border-bottom-color:var(--blue);background:var(--blue-pale2);}
+.rpb{flex:1;overflow-y:auto;padding:13px;}
+.rpb::-webkit-scrollbar{width:4px;}.rpb::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px;}
+/* Compliance */
+.sbox{background:linear-gradient(135deg,var(--blue),var(--blue-mid));border-radius:var(--r);padding:13px;color:#fff;text-align:center;margin-bottom:13px;}
+.sn2{font-size:42px;font-weight:700;font-family:'DM Mono',monospace;line-height:1;}
+.sl2{font-size:9.5px;opacity:.75;letter-spacing:.08em;text-transform:uppercase;margin-top:3px;}
+.ci{display:flex;align-items:flex-start;gap:7px;padding:8px 9px;border-radius:6px;margin-bottom:6px;border:1.5px solid;}
+.ci.ok{background:#f0fdf7;border-color:#86efcd;}.ci.warn{background:#fffbf0;border-color:#fde68a;}.ci.fail{background:#fff5f5;border-color:#fca5a5;}.ci.skip{background:#f8f9fb;border-color:#dde1ef;}
+.ciico{font-size:12px;flex-shrink:0;margin-top:1px;}
+.citxt{font-size:10.5px;line-height:1.4;color:var(--text2);}
+.citxt strong{color:var(--text);display:block;margin-bottom:1px;font-size:11px;}
+/* Exports */
+.eo{display:flex;align-items:center;gap:9px;padding:9px 10px;border:1.5px solid var(--border);border-radius:7px;cursor:pointer;transition:all .15s;margin-bottom:7px;}
+.eo:hover{border-color:var(--blue);background:var(--blue-pale2);transform:translateX(2px);}
+.eico{width:32px;height:32px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;}
+.enm{font-size:12.5px;font-weight:700;}.edsc{font-size:10px;color:var(--text3);margin-top:1px;}
+/* History */
+.hi{display:flex;gap:8px;padding:8px;border-radius:7px;cursor:pointer;transition:background .15s;margin-bottom:4px;}
+.hi:hover{background:var(--surface);}
+.hitp{width:42px;height:26px;border-radius:4px;background:linear-gradient(135deg,var(--blue),var(--blue-mid));display:flex;align-items:center;justify-content:center;color:#fff;font-size:7.5px;font-weight:700;flex-shrink:0;}
+.hinm{font-size:12px;font-weight:600;}.himt{font-size:10px;color:var(--text3);margin-top:1px;}
+.dot{width:5px;height:5px;border-radius:50%;background:var(--green);display:inline-block;margin-right:3px;}
+/* Toast */
+.toast{position:fixed;bottom:20px;right:20px;background:var(--text);color:#fff;padding:10px 15px;border-radius:8px;font-size:13px;font-weight:500;box-shadow:var(--shlg);display:flex;align-items:center;gap:8px;transform:translateY(60px);opacity:0;transition:all .3s cubic-bezier(.34,1.56,.64,1);z-index:1000;}
+.toast.show{transform:translateY(0);opacity:1;}
+@keyframes fu{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:translateY(0);}}
+.fi{animation:fu .35s ease both;}
+@keyframes pu{0%,100%{opacity:1;}50%{opacity:.65;}}
+.upd{animation:pu .35s ease;}
+</style>
+</head>
+<body>
+
+<nav>
+  <a class="nlogo" href="#">alera</a>
+  <div class="nsep"></div>
+  <span class="napp">Label Studio</span>
+  <div class="ntabs">
+    <button class="ntab active" onclick="gv('dash',this)">Dashboard</button>
+    <button class="ntab" onclick="gv('editor',this)">Label Editor</button>
+    <button class="ntab" onclick="showT('📁 Templates coming soon…')">Templates</button>
+    <button class="ntab" onclick="showT('📚 Library coming soon…')">Library</button>
+  </div>
+  <div class="nright">
+    <span class="chip">21 CFR 801</span>
+    <span class="chip">ISO 15223-1</span>
+    <span class="chip">MDR 2017/745</span>
+    <button class="btn bp bsm" onclick="gv('editor',null)">＋ New Label</button>
+  </div>
+</nav>
+
+<!-- DASHBOARD -->
+<div id="vdash" class="view active fi" style="flex-direction:column;overflow-y:auto;padding:26px 32px;gap:20px;">
+  <div class="hero">
+    <div>
+      <h1>Medical Device Label Studio</h1>
+      <p>Create FDA 21 CFR 801, EU MDR, ISO 15223-1 compliant labels — branded, print-ready, and Zebra-printer compatible.</p>
+      <button class="btn blg" onclick="gv('editor',null)">Start New Label →</button>
+    </div>
+  </div>
+  <div class="stats">
+    <div class="stat"><div class="sn">247</div><div class="sl">Labels Created</div><div class="ss">↑ 12 this month</div></div>
+    <div class="stat"><div class="sn">98%</div><div class="sl">FDA Compliance Rate</div><div class="ss">All Class II checked</div></div>
+    <div class="stat"><div class="sn">6</div><div class="sl">Active Templates</div><div class="ss">↑ 2 new</div></div>
+    <div class="stat"><div class="sn">1,840</div><div class="sl">Labels Printed</div><div class="ss">↑ 340 this week</div></div>
+  </div>
+  <div class="dcols">
+    <div class="dcard">
+      <div class="dchead"><span class="dct">Recent Labels</span><button class="btn bs bsm">View All</button></div>
+      <div class="dcbody">
+        <div class="rl"><div class="rlt">ALERA</div><div><div class="rln">Cardiac Monitor CM-400</div><div class="rlm">REF: ALR-CM-400-01 · 2h ago</div></div><span class="pill pg">Approved</span></div>
+        <div class="rl"><div class="rlt">ALERA</div><div><div class="rln">Infusion Pump IP-220X (Rx)</div><div class="rlm">REF: ALR-IP-220X-02 · 1d ago</div></div><span class="pill pb">Draft</span></div>
+        <div class="rl"><div class="rlt">ALERA</div><div><div class="rln">Bone Anchor BA-7 (Sterile)</div><div class="rlm">REF: ALR-BA-7-01 · 2d ago</div></div><span class="pill pg">Approved</span></div>
+        <div class="rl"><div class="rlt">ALERA</div><div><div class="rln">Wound Dressing Kit WD-50</div><div class="rlm">REF: ALR-WD-50-01 · 3d ago</div></div><span class="pill py">Pending</span></div>
+        <div class="rl"><div class="rlt">ALERA</div><div><div class="rln">BG Test Kit BG-100 (IVD)</div><div class="rlm">REF: ALR-BG-100-01 · 5d ago</div></div><span class="pill pr">Revision</span></div>
+      </div>
+    </div>
+    <div class="dcard">
+      <div class="dchead"><span class="dct">Regulatory Compliance Status</span><span class="pill pg">Active</span></div>
+      <div class="dcbody">
+        <ul class="rlist">
+          <li><span class="rok">✓</span>21 CFR Part 801 — Device ID, REF, manufacturer address verified</li>
+          <li><span class="rok">✓</span>UDI 21 CFR Part 830 — GS1 GTIN format validated</li>
+          <li><span class="rok">✓</span>LOT / Serial traceability — Section D confirmed</li>
+          <li><span class="rok">✓</span>ISO 15223-1 — All symbols from approved set</li>
+          <li><span class="rok">✓</span>ISO 20417 — IFU reference fields present</li>
+          <li><span class="rwarn">⚠</span>Sterile: EO/Gamma sterilization — 3 labels pending review</li>
+          <li><span class="rok">✓</span>MDR 2017/745 — CE + Notified Body on EU labels</li>
+          <li><span class="rwarn">⚠</span>Rx caution statement — 2 Class II labels missing statement</li>
+          <li><span class="rok">✓</span>GS1 barcode min bar width ≥ 0.25mm verified</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- EDITOR -->
+<div id="veditor" class="view" style="height:calc(100vh - 58px);overflow:hidden;">
+<div class="ewrap">
+
+<!-- LEFT SIDEBAR -->
+<div class="lsb">
+  <div class="lsbh">
+    <select onchange="applyTpl(this.value);this.value='';" style="font-size:12px;margin-top:0;">
+      <option value="">Load template…</option>
+      <option value="cardiac">Cardiac Monitor (Class II)</option>
+      <option value="implant">Bone Anchor (Sterile, Single-Use)</option>
+      <option value="sterile">Wound Dressing (Sterile Kit)</option>
+      <option value="ivd">Blood Glucose Kit (IVD)</option>
+      <option value="infusion">Infusion Pump (Rx, Class II)</option>
+    </select>
+  </div>
+  <div class="lsbs">
+
+    <!-- A -->
+    <div class="sec"><div class="secl">A</div><span class="sect">Device Identification</span><div class="secln"></div></div>
+    <div class="fg"><label class="fl">Common / Device Name <span class="req">Required</span></label><input id="fcom" value="Cardiac Monitor" oninput="upd()"></div>
+    <div class="fg"><label class="fl">Proprietary / Brand Name</label><input id="fbrand" value="ClearHeart CM-400" oninput="upd()"></div>
+    <div class="fg"><label class="fl">Model / Catalog Number (REF) <span class="req">Required</span></label><input id="fref" value="ALR-CM-400-01" oninput="upd()"></div>
+    <div class="fg"><label class="fl">Device Description</label><textarea id="fdesc" rows="2" oninput="upd()">Continuous cardiac monitoring device for clinical use</textarea></div>
+
+    <!-- B -->
+    <div class="sec"><div class="secl">B</div><span class="sect">Manufacturer</span><div class="secln"></div></div>
+    <div class="fg"><label class="fl">Manufacturer Legal Name <span class="req">Required</span></label><input id="fmfr" value="Alera Medical Systems GmbH" oninput="upd()"></div>
+    <div class="r2">
+      <div class="fg"><label class="fl">City <span class="req">Required</span></label><input id="fcity" value="Stuttgart" oninput="upd()"></div>
+      <div class="fg"><label class="fl">State / Region</label><input id="fstate" value="" oninput="upd()"></div>
+    </div>
+    <div class="r2">
+      <div class="fg"><label class="fl">ZIP / Postal</label><input id="fzip" value="70376" oninput="upd()"></div>
+      <div class="fg"><label class="fl">Country <span class="req">Required</span></label><input id="fctry" value="Germany" oninput="upd()"></div>
+    </div>
+    <div class="fg"><label class="fl">Manufactured For <span class="opt">If applicable</span></label><input id="fmfrfor" placeholder="Company name, address" oninput="upd()"></div>
+    <div class="fg"><label class="fl">Distributed By <span class="opt">If applicable</span></label><input id="fdist" placeholder="Distributor name" oninput="upd()"></div>
+    <div class="fg"><label class="fl">Authorized EU Representative</label><input id="fec" value="Alera EU Rep, Hauptstraße 1, Berlin, DE" oninput="upd()"></div>
+    <div class="r2">
+      <div class="fg"><label class="fl">Customer Service Phone</label><input id="fphone" value="+1 800 555 0190" oninput="upd()"></div>
+      <div class="fg"><label class="fl">Website</label><input id="fweb" value="aleramedical.com" oninput="upd()"></div>
+    </div>
+
+    <!-- C -->
+    <div class="sec"><div class="secl">C</div><span class="sect">UDI — Unique Device Identifier</span><div class="secln"></div></div>
+    <div class="fg"><label class="fl">UDI-DI (GS1 GTIN) <span class="req">Required</span></label><input id="fudi_di" value="(01)00843217016831" oninput="upd()" style="font-family:'DM Mono',monospace;font-size:11px;"></div>
+    <div class="fg"><label class="fl">UDI-PI (Production Identifier)</label><input id="fudi_pi" value="(10)LOT2024-03-A(11)240315" oninput="upd()" style="font-family:'DM Mono',monospace;font-size:11px;"></div>
+    <div class="fg"><label class="fl">UDI Barcode Format</label>
+      <select id="fbc"><option value="gs1128">GS1-128 (EU MDR / FDA default)</option><option value="datamatrix">Data Matrix 2D (DSCSA)</option><option value="qr">QR Code</option></select>
+    </div>
+
+    <!-- D -->
+    <div class="sec"><div class="secl">D</div><span class="sect">Control & Traceability</span><div class="secln"></div></div>
+    <div class="fg"><label class="fl">LOT / Batch Number <span class="req">Required</span></label><input id="flot" value="LOT2024-03-A" oninput="upd()" style="font-family:'DM Mono',monospace;"></div>
+    <div class="fg"><label class="fl">Serial Number <span class="opt">If applicable</span></label><input id="fserial" value="SN-0042891" oninput="upd()" style="font-family:'DM Mono',monospace;"></div>
+    <div class="r2">
+      <div class="fg"><label class="fl">Manufacturing Date</label><input type="date" id="fmfg" value="2024-03-15" oninput="upd()"></div>
+      <div class="fg"><label class="fl">Expiration Date</label><input type="date" id="fexp" value="2026-03-15" oninput="upd()"></div>
+    </div>
+
+    <!-- E -->
+    <div class="sec"><div class="secl">E</div><span class="sect">Sterility Information</span><div class="secln"></div></div>
+    <div class="tr"><span class="trl">Device is Sterile</span><label class="tog"><input type="checkbox" id="tster" onchange="upd()"><span class="togs"></span></label></div>
+    <div id="sterFlds" style="display:none;">
+      <div class="fg" style="margin-top:7px;"><label class="fl">Sterilization Method <span class="req">Required if sterile</span></label>
+        <select id="fsterm" onchange="upd()">
+          <option value="EO">EO — Ethylene Oxide</option>
+          <option value="Gamma">Gamma Irradiation</option>
+          <option value="E-beam">E-beam</option>
+          <option value="Steam">Steam (Autoclave)</option>
+          <option value="Dry Heat">Dry Heat</option>
+        </select>
+      </div>
+      <div class="tr"><span class="trl">Do Not Resterilize</span><label class="tog"><input type="checkbox" id="tnorester" checked onchange="upd()"><span class="togs"></span></label></div>
+      <div class="tr"><span class="trl">Do Not Use if Package Damaged</span><label class="tog"><input type="checkbox" id="tnodmg" checked onchange="upd()"><span class="togs"></span></label></div>
+    </div>
+
+    <!-- F -->
+    <div class="sec"><div class="secl">F</div><span class="sect">Single-Use Information</span><div class="secln"></div></div>
+    <div class="tr"><span class="trl">Single-Use Device (Do Not Reuse)</span><label class="tog"><input type="checkbox" id="tsu" onchange="upd()"><span class="togs"></span></label></div>
+
+    <!-- G -->
+    <div class="sec"><div class="secl">G</div><span class="sect">Quantity</span><div class="secln"></div></div>
+    <div class="fg"><label class="fl">Contents / Quantity</label><input id="fqty" value="1 Each" oninput="upd()"></div>
+
+    <!-- H -->
+    <div class="sec"><div class="secl">H</div><span class="sect">Instructions for Use (IFU)</span><div class="secln"></div></div>
+    <div class="tr"><span class="trl">Show "See Instructions for Use"</span><label class="tog"><input type="checkbox" id="tifu" checked onchange="upd()"><span class="togs"></span></label></div>
+    <div class="fg"><label class="fl">IFU / eIFU Website <span class="opt">Optional</span></label><input id="fifuurl" value="ifu.aleramedical.com/cm400" oninput="upd()"></div>
+    <div class="tr"><span class="trl">Show QR Code (IFU reference)</span><label class="tog"><input type="checkbox" id="tqr" onchange="upd()"><span class="togs"></span></label></div>
+
+    <!-- I -->
+    <div class="sec"><div class="secl">I</div><span class="sect">Storage Conditions</span><div class="secln"></div></div>
+    <div class="r2">
+      <div class="fg"><label class="fl">Temperature Range</label><input id="ftemp" value="15–30°C" oninput="upd()"></div>
+      <div class="fg"><label class="fl">Humidity Range</label><input id="fhumid" value="15–85% RH" oninput="upd()"></div>
+    </div>
+    <div class="fg"><label class="fl">Additional Storage Notes</label><input id="fstorenote" placeholder="Keep Dry, Protect from Sunlight…" oninput="upd()"></div>
+
+    <!-- J -->
+    <div class="sec"><div class="secl">J</div><span class="sect">Caution Statements</span><div class="secln"></div></div>
+    <div class="tr"><span class="trl">Rx Caution Statement (Class II Rx)</span><label class="tog"><input type="checkbox" id="trx" onchange="upd()"><span class="togs"></span></label></div>
+    <div class="tr"><span class="trl">Contains Natural Rubber Latex Warning</span><label class="tog"><input type="checkbox" id="tlatex" onchange="upd()"><span class="togs"></span></label></div>
+
+    <!-- Best Practice -->
+    <div class="sec"><div class="secl" style="font-size:8px;">BP</div><span class="sect">Additional Fields (Best Practice)</span><div class="secln"></div></div>
+    <div class="fg"><label class="fl">Country of Origin <span class="opt">Recommended</span></label><input id="forigin" value="Made in Germany" oninput="upd()"></div>
+    <div class="fg"><label class="fl">Material Disclosure</label><input id="fmaterial" placeholder="e.g. Contains DEHP" oninput="upd()"></div>
+
+    <!-- Symbols -->
+    <div class="sec"><div class="secl">☑</div><span class="sect">ISO 15223-1 Symbols</span><div class="secln"></div></div>
+    <div class="symg" id="symGrid"></div>
+
+    <!-- Format -->
+    <div class="sec"><div class="secl">⚙</div><span class="sect">Label Format</span><div class="secln"></div></div>
+    <div class="r2">
+      <div class="fg"><label class="fl">Label Size</label>
+        <select id="fsize" onchange="updSz()">
+          <option value="s">Standard 102×64mm</option>
+          <option value="sm">Small 76×51mm</option>
+          <option value="lg">Large 150×100mm</option>
+        </select>
+      </div>
+      <div class="fg"><label class="fl">Printer DPI</label>
+        <select><option>203 dpi</option><option selected>300 dpi</option><option>600 dpi</option></select>
+      </div>
+    </div>
+
+  </div><!-- /lsbs -->
+  <div class="lsbf">
+    <button class="btn bp" style="flex:1;" onclick="showT('💾 Label saved successfully!')">💾 Save Label</button>
+    <button class="btn bs" onclick="swRP('exp')">📤 Export</button>
+  </div>
+</div><!-- /lsb -->
+
+<!-- CANVAS -->
+<div class="cc">
+  <div class="ctb">
+    <div class="tbg">
+      <span class="tbl">Zoom</span>
+      <button class="btn bg bsm" onclick="zoom(-.1)">−</button>
+      <span class="zn" id="znum">100%</span>
+      <button class="btn bg bsm" onclick="zoom(.1)">+</button>
+      <button class="btn bg bsm" onclick="zoom(0)">Fit</button>
+    </div>
+    <div class="tbg"><span class="tbl">View</span><button class="btn bg bsm" onclick="showT('🖨 Print preview…')">Print Preview</button></div>
+    <div class="tbg" style="margin-left:auto;">
+      <button class="btn bg bsm" onclick="showT('↩ Undone')">↩</button>
+      <button class="btn bg bsm" onclick="showT('↪ Redone')">↪</button>
+    </div>
+    <div class="tbg">
+      <select style="font-size:12px;padding:4px 8px;width:auto;" onchange="showT('🌐 Language: '+this.value)">
+        <option>EN (English)</option><option>DE (Deutsch)</option><option>FR (Français)</option><option>ES (Español)</option><option>JA (日本語)</option><option>ZH (中文)</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="cs">
+    <div class="lwrap">
+      <div class="lshadow">
+        <div class="label ssz" id="lbl">
+          <!-- HEADER -->
+          <div class="lhdr">
+            <div style="display:flex;align-items:baseline;">
+              <span class="lbrand">alera</span>
+              <span class="lpname" id="obrand">ClearHeart CM-400</span>
+            </div>
+            <div class="lhdrr">
+              <span class="lrefl">REF <span id="oref">ALR-CM-400-01</span></span>
+              <span class="lrefl">SN <span id="oserial">SN-0042891</span></span>
+              <span class="lrefl" id="oqty_h" style="font-size:8.5px;opacity:.7;">1 Each</span>
+            </div>
+          </div>
+
+          <!-- BODY -->
+          <div class="lbody">
+            <div class="lmain">
+              <!-- Device name + tags -->
+              <div style="display:flex;align-items:center;gap:7px;flex-wrap:wrap;">
+                <span style="font-size:14px;font-weight:700;" id="ocommon">Cardiac Monitor</span>
+                <span class="lstag" id="osters" style="display:none;">STERILE · <span id="osterm">EO</span></span>
+                <span class="lstag" id="osus" style="display:none;background:#059669;">SINGLE USE</span>
+              </div>
+              <!-- Desc -->
+              <div class="lf"><span class="lfl">Description</span><span class="lfv sm" id="odesc">Continuous cardiac monitoring device for clinical use</span></div>
+              <!-- Mfr -->
+              <div class="lr2">
+                <div class="lf">
+                  <span class="lfl">🏭 Manufacturer</span>
+                  <span class="lfv" style="font-size:11px;" id="omfr">Alera Medical Systems GmbH</span>
+                  <span class="lfv sm" id="oaddr">Stuttgart 70376, Germany</span>
+                </div>
+                <div class="lf">
+                  <span class="lfl" id="omfrfor_lbl" style="display:none;">Mfr. For / Dist. By</span>
+                  <span class="lfv sm" id="omfrfor" style="display:none;"></span>
+                  <span class="lfl" style="margin-top:3px;">🌐 Origin / Web</span>
+                  <span class="lfv sm" id="oorigin">Made in Germany</span>
+                  <span class="lfv sm" id="oweb" style="color:var(--blue);">aleramedical.com</span>
+                </div>
+              </div>
+              <!-- LOT / Dates -->
+              <div class="lr">
+                <div class="lf"><span class="lfl">📋 LOT</span><span class="lfv mn" id="olot">LOT2024-03-A</span></div>
+                <div class="lf"><span class="lfl">🏭 MFG</span><span class="lfv mn" id="omfg">2024-03-15</span></div>
+                <div class="lf"><span class="lfl">⏰ EXP</span><span class="lfv ex" id="oexp">2026-03-15</span></div>
+              </div>
+              <!-- UDI -->
+              <div class="lf">
+                <span class="lfl">📱 UDI — Unique Device Identifier</span>
+                <span class="lfv mn" style="font-size:10px;" id="oudi_di">(01)00843217016831</span>
+                <span class="lfv mn" style="font-size:10px;color:var(--text2);" id="oudi_pi">(10)LOT2024-03-A(11)240315</span>
+              </div>
+              <!-- Storage -->
+              <div class="lf"><span class="lfl">🌡 Storage Conditions</span><span class="lfv sm" id="ostorage">15–30°C · 15–85% RH</span></div>
+              <!-- Cautions -->
+              <div class="lcau" id="orx" style="display:none;">⚠ CAUTION: Federal law restricts this device to sale by or on the order of a physician.</div>
+              <div id="olatex" style="display:none;background:#fff0f0;border:1px solid #fca5a5;border-radius:4px;padding:3px 7px;font-size:9px;font-weight:700;color:#991b1b;">⚠ Contains Natural Rubber Latex</div>
+              <!-- Material -->
+              <div class="lf" id="omatlf" style="display:none;"><span class="lfl">Material</span><span class="lfv sm" id="omat"></span></div>
+              <!-- IFU -->
+              <div id="oifublock" style="display:flex;align-items:center;gap:6px;margin-top:auto;">
+                <span style="font-size:9px;font-weight:600;color:var(--text2);">📖 See Instructions for Use · <span id="oifuurl" style="color:var(--blue);">ifu.aleramedical.com/cm400</span></span>
+              </div>
+            </div>
+
+            <!-- RIGHT BAR -->
+            <div class="lrbar">
+              <div class="lbc">
+                <svg viewBox="0 0 148 60" style="width:100%;max-width:148px;" xmlns="http://www.w3.org/2000/svg">
+                  <rect width="148" height="60" fill="white"/>
+                  <g fill="#000">
+                    <rect x="5" y="3" width="2" height="46"/><rect x="9" y="3" width="1" height="46"/><rect x="12" y="3" width="3" height="46"/><rect x="17" y="3" width="1" height="46"/><rect x="20" y="3" width="2" height="46"/><rect x="24" y="3" width="2" height="46"/><rect x="28" y="3" width="1" height="46"/><rect x="31" y="3" width="3" height="46"/><rect x="36" y="3" width="2" height="46"/><rect x="40" y="3" width="1" height="46"/><rect x="43" y="3" width="2" height="46"/><rect x="47" y="3" width="3" height="46"/><rect x="52" y="3" width="1" height="46"/><rect x="55" y="3" width="2" height="46"/><rect x="59" y="3" width="1" height="46"/><rect x="62" y="3" width="3" height="46"/><rect x="67" y="3" width="2" height="46"/><rect x="71" y="3" width="1" height="46"/><rect x="74" y="3" width="2" height="46"/><rect x="78" y="3" width="3" height="46"/><rect x="83" y="3" width="1" height="46"/><rect x="86" y="3" width="2" height="46"/><rect x="90" y="3" width="2" height="46"/><rect x="94" y="3" width="1" height="46"/><rect x="97" y="3" width="3" height="46"/><rect x="102" y="3" width="2" height="46"/><rect x="106" y="3" width="1" height="46"/><rect x="109" y="3" width="2" height="46"/><rect x="113" y="3" width="3" height="46"/><rect x="118" y="3" width="1" height="46"/><rect x="121" y="3" width="2" height="46"/><rect x="125" y="3" width="1" height="46"/><rect x="128" y="3" width="2" height="46"/><rect x="132" y="3" width="3" height="46"/><rect x="137" y="3" width="1" height="46"/><rect x="140" y="3" width="2" height="46"/><rect x="144" y="3" width="1" height="46"/>
+                  </g>
+                  <text x="74" y="56" text-anchor="middle" font-size="5.5" font-family="monospace" fill="#555">(01)00843217016831</text>
+                </svg>
+                <span class="lbcl" id="obclabel">GS1-128 UDI Carrier</span>
+              </div>
+              <!-- QR -->
+              <div class="lqr" id="oqr" style="display:none;">
+                <svg viewBox="0 0 40 40" width="40" height="40" xmlns="http://www.w3.org/2000/svg">
+                  <rect width="40" height="40" fill="white"/>
+                  <rect x="2" y="2" width="16" height="16" rx="2" fill="none" stroke="#000" stroke-width="1.5"/>
+                  <rect x="5" y="5" width="10" height="10" rx="1" fill="#000"/>
+                  <rect x="22" y="2" width="16" height="16" rx="2" fill="none" stroke="#000" stroke-width="1.5"/>
+                  <rect x="25" y="5" width="10" height="10" rx="1" fill="#000"/>
+                  <rect x="2" y="22" width="16" height="16" rx="2" fill="none" stroke="#000" stroke-width="1.5"/>
+                  <rect x="5" y="25" width="10" height="10" rx="1" fill="#000"/>
+                  <rect x="22" y="22" width="4" height="4" fill="#000"/><rect x="28" y="22" width="4" height="4" fill="#000"/>
+                  <rect x="34" y="22" width="4" height="4" fill="#000"/><rect x="22" y="28" width="4" height="4" fill="#000"/>
+                  <rect x="28" y="28" width="4" height="4" fill="#000"/><rect x="34" y="34" width="4" height="4" fill="#000"/>
+                </svg>
+              </div>
+              <!-- IFU tag -->
+              <div class="lifu" id="oifutag" style="display:none;">📖 See IFU</div>
+              <!-- Symbols -->
+              <div class="lsyms" id="osyms"></div>
+            </div>
+          </div><!-- /lbody -->
+
+          <!-- FOOTER -->
+          <div class="lftr">
+            <div class="lftrf"><span class="lftrk">EC Rep:</span><span id="oec">Alera EU Rep, Hauptstraße 1, Berlin, DE</span></div>
+            <div class="lftrf"><span class="lftrk">Ph:</span><span id="ophone">+1 800 555 0190</span></div>
+            <div class="lftrf" style="color:var(--blue);font-weight:700;">𝗖𝗘 0123 · Class IIb · MDR 2017/745</div>
+          </div>
+          <div class="lstripe"></div>
+        </div>
+      </div>
+      <div style="display:flex;gap:12px;align-items:center;">
+        <span style="font-size:11px;color:var(--text3);font-family:'DM Mono',monospace;" id="szlabel">102 × 64 mm · 300 DPI</span>
+        <span id="compind" style="font-size:12px;font-weight:700;color:var(--green);">✓ Compliant</span>
+      </div>
+    </div>
+  </div>
+</div><!-- /cc -->
+
+<!-- RIGHT PANEL -->
+<div class="rp">
+  <div class="rptabs">
+    <button class="rptab active" id="rt-comp" onclick="swRP('comp')">Compliance</button>
+    <button class="rptab" id="rt-exp" onclick="swRP('exp')">Export</button>
+    <button class="rptab" id="rt-hist" onclick="swRP('hist')">History</button>
+  </div>
+
+  <!-- Compliance -->
+  <div class="rpb" id="rp-comp">
+    <div class="sbox"><div class="sn2" id="scoreN">92</div><div class="sl2">Compliance Score</div></div>
+    <div class="ci ok" id="ciA"><span class="ciico">✅</span><div class="citxt"><strong>A — Device ID</strong>Common name, brand, REF present — 21 CFR 801.3</div></div>
+    <div class="ci ok" id="ciB"><span class="ciico">✅</span><div class="citxt"><strong>B — Manufacturer</strong>Legal name, city, ZIP, country — 21 CFR 801.1</div></div>
+    <div class="ci ok" id="ciC"><span class="ciico">✅</span><div class="citxt"><strong>C — UDI Carrier</strong>GS1 GTIN DI + PI fields — 21 CFR Part 830</div></div>
+    <div class="ci ok" id="ciD"><span class="ciico">✅</span><div class="citxt"><strong>D — Traceability</strong>LOT + dates — ISO 15223-1 §5.1.5</div></div>
+    <div class="ci skip" id="ciE"><span class="ciico">⬜</span><div class="citxt"><strong>E — Sterility</strong>Not marked sterile — toggle if device is sterile</div></div>
+    <div class="ci skip" id="ciF"><span class="ciico">⬜</span><div class="citxt"><strong>F — Single-Use</strong>Not marked — enable if applicable</div></div>
+    <div class="ci ok" id="ciG"><span class="ciico">✅</span><div class="citxt"><strong>G — Quantity</strong>"1 Each" specified — ISO 20417</div></div>
+    <div class="ci ok" id="ciH"><span class="ciico">✅</span><div class="citxt"><strong>H — IFU Reference</strong>"See Instructions for Use" present</div></div>
+    <div class="ci ok" id="ciI"><span class="ciico">✅</span><div class="citxt"><strong>I — Storage</strong>Temp + humidity specified</div></div>
+    <div class="ci skip" id="ciJ"><span class="ciico">⬜</span><div class="citxt"><strong>J — Caution (Rx)</strong>Not required — enable for Class II Rx devices</div></div>
+    <div class="ci ok"><span class="ciico">✅</span><div class="citxt"><strong>ISO 15223-1 Symbols</strong>Approved symbol set only</div></div>
+    <div class="ci ok"><span class="ciico">✅</span><div class="citxt"><strong>CE + Notified Body</strong>CE 0123 — MDR 2017/745 Art. 20</div></div>
+    <div class="ci warn"><span class="ciico">⚠️</span><div class="citxt"><strong>UDI-PI Completeness</strong>Verify all required production identifiers for this device class are in PI field</div></div>
+  </div>
+
+  <!-- Exports -->
+  <div class="rpb" id="rp-exp" style="display:none;">
+    <p style="font-size:11px;color:var(--text3);margin-bottom:13px;">Export in your required format.</p>
+    <div class="eo" onclick="showT('🌐 Generating shareable link…')"><div class="eico" style="background:#e8f3fd;">🌐</div><div><div class="enm">Online Preview</div><div class="edsc">Shareable URL · Browser view</div></div></div>
+    <div class="eo" onclick="showT('📝 Generating editable PDF…')"><div class="eico" style="background:#fdecea;">📝</div><div><div class="enm">Editable PDF</div><div class="edsc">AcroForm fields · Acrobat</div></div></div>
+    <div class="eo" onclick="showT('📋 Generating print-ready PDF/X-3…')"><div class="eico" style="background:#fdf0e8;">📋</div><div><div class="enm">Print PDF (PDF/X-3)</div><div class="edsc">CMYK · Bleed marks · 300 DPI</div></div></div>
+    <div class="eo" onclick="showT('🦓 Generating ZPL II…')"><div class="eico" style="background:#f0fdf4;">🦓</div><div><div class="enm">Zebra ZPL II</div><div class="edsc">ZT411, ZD420, GK420d</div></div></div>
+    <div class="eo" onclick="showT('📐 Exporting SVG…')"><div class="eico" style="background:#f5f0fd;">📐</div><div><div class="enm">SVG Vector</div><div class="edsc">Scalable · Illustrator</div></div></div>
+    <div class="eo" onclick="showT('📊 Exporting XML/JSON…')"><div class="eico" style="background:#fffbf0;">📊</div><div><div class="enm">XML / JSON</div><div class="edsc">ERP / MES integration</div></div></div>
+    <div style="border-top:1px solid var(--border);padding-top:13px;margin-top:6px;">
+      <p style="font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--text3);margin-bottom:9px;">Zebra Printer Settings</p>
+      <div class="fg"><label class="fl">Printer Model</label><select style="font-size:12px;"><option>Zebra ZT411 (300 dpi)</option><option>Zebra ZT230 (203 dpi)</option><option>Zebra ZD420 (203 dpi)</option><option>Zebra GK420d</option></select></div>
+      <div class="fg"><label class="fl">Print Speed</label><select style="font-size:12px;"><option>4 ips (standard)</option><option>2 ips (quality)</option><option>6 ips (fast)</option></select></div>
+      <div class="fg"><label class="fl">Copies</label><input type="number" value="1" min="1" style="font-size:12px;"></div>
+      <button class="btn bp" style="width:100%;margin-top:4px;" onclick="showT('🦓 Sent to Zebra queue!')">🦓 Send to Printer</button>
+    </div>
+  </div>
+
+  <!-- History -->
+  <div class="rpb" id="rp-hist" style="display:none;">
+    <p style="font-size:11px;color:var(--text3);margin-bottom:11px;">Version history for this label</p>
+    <div class="hi"><div class="hitp">v2.3</div><div><div class="hinm">Current draft</div><div class="himt"><span class="dot"></span>Just now · You</div></div></div>
+    <div class="hi"><div class="hitp" style="background:linear-gradient(135deg,#4a5280,#6570a0);">v2.2</div><div><div class="hinm">Added Rx caution + latex</div><div class="himt">2h ago · R. Martinez</div></div></div>
+    <div class="hi"><div class="hitp" style="background:linear-gradient(135deg,#4a5280,#6570a0);">v2.1</div><div><div class="hinm">UDI-PI fields added</div><div class="himt">Yesterday · A. Schmidt</div></div></div>
+    <div class="hi"><div class="hitp" style="background:linear-gradient(135deg,#4a5280,#6570a0);">v1.0</div><div><div class="hinm">Initial label created</div><div class="himt">3 days ago · J. Chen</div></div></div>
+  </div>
+</div>
+
+</div><!-- /ewrap -->
+</div><!-- /veditor -->
+
+<div class="toast" id="toast"><span id="tmsg"></span></div>
+
+<script>
+// SYMBOLS
+const SYMS=[
+  {id:'ce',e:'𝗖𝗘',t:'CE Mark',on:true},
+  {id:'mfr',e:'🏭',t:'Manufacturer',on:true},
+  {id:'sterile',e:'🦠',t:'STERILE',on:false},
+  {id:'su',e:'⟳',t:'Single Use / Do Not Reuse',on:false},
+  {id:'dry',e:'💧',t:'Keep Dry',on:true},
+  {id:'temp',e:'🌡️',t:'Temperature Limits',on:true},
+  {id:'lot',e:'📋',t:'Lot Number',on:true},
+  {id:'exp',e:'⏰',t:'Use By / Expiry Date',on:true},
+  {id:'ref',e:'🔖',t:'Catalog Number (REF)',on:true},
+  {id:'ifu',e:'📖',t:'Consult IFU',on:true},
+  {id:'udi',e:'📱',t:'UDI',on:true},
+  {id:'ec',e:'🏢',t:'Authorized Representative',on:true},
+  {id:'latex',e:'🚫',t:'Latex Free / No Latex',on:false},
+  {id:'noreus',e:'🔁',t:'Do Not Reuse',on:false},
+  {id:'norest',e:'🔄',t:'Do Not Resterilize',on:false},
+  {id:'nodmg',e:'📦',t:'Do Not Use if Package Damaged',on:false},
+  {id:'bio',e:'☣️',t:'Biohazard',on:false},
+  {id:'nonster',e:'🔓',t:'Non-Sterile',on:false},
+];
+
+function renderGrid(){
+  const g=document.getElementById('symGrid');g.innerHTML='';
+  SYMS.forEach(s=>{
+    const b=document.createElement('button');
+    b.className='symb'+(s.on?' on':'');
+    b.innerHTML=s.e+'<span class="symt">'+s.t+'</span>';
+    b.onclick=()=>{s.on=!s.on;b.classList.toggle('on',s.on);renderLblSyms();};
+    g.appendChild(b);
+  });
+  renderLblSyms();
+}
+
+function renderLblSyms(){
+  const c=document.getElementById('osyms');c.innerHTML='';
+  SYMS.filter(s=>s.on).forEach(s=>{
+    const sp=document.createElement('span');sp.className='lsym';sp.title=s.t;sp.textContent=s.e;c.appendChild(sp);
+  });
+}
+
+// LABEL UPDATE
+function st(id,v){const e=document.getElementById(id);if(e)e.textContent=v;}
+function vis(id,show){const e=document.getElementById(id);if(e)e.style.display=show?'':'none';}
+
+function upd(){
+  const gv=id=>document.getElementById(id)?.value||'';
+  const gb=id=>document.getElementById(id)?.checked||false;
+
+  // A
+  st('ocommon',gv('fcom'));st('obrand',gv('fbrand'));st('oref',gv('fref'));st('odesc',gv('fdesc'));
+
+  // B
+  st('omfr',gv('fmfr'));
+  const addr=[gv('fcity'),gv('fstate'),gv('fzip'),gv('fctry')].filter(Boolean).join(', ');
+  st('oaddr',addr);
+  const mf=[gv('fmfrfor')?'Mfr. For: '+gv('fmfrfor'):'',gv('fdist')?'Dist. By: '+gv('fdist'):''].filter(Boolean).join(' · ');
+  if(mf){vis('omfrfor_lbl',true);st('omfrfor',mf);vis('omfrfor',true);}
+  else{vis('omfrfor_lbl',false);vis('omfrfor',false);}
+  st('oec',gv('fec'));st('ophone',gv('fphone'));st('oweb',gv('fweb'));st('oorigin',gv('forigin'));
+
+  // C
+  st('oudi_di',gv('fudi_di'));st('oudi_pi',gv('fudi_pi'));
+
+  // D
+  st('olot',gv('flot'));st('oserial',gv('fserial'));st('omfg',gv('fmfg'));st('oexp',gv('fexp'));
+
+  // E sterile
+  const ster=gb('tster');
+  vis('sterFlds',ster);vis('osters',ster);
+  st('osterm',ster?gv('fsterm'):'');
+  updCI('ciE',ster?'ok':'skip',ster?'✅':'⬜',ster?'E — Sterile: '+gv('fsterm')+' — ISO 15223-1':'E — Sterility: Not marked sterile');
+
+  // F single-use
+  const su=gb('tsu');vis('osus',su);
+  updCI('ciF',su?'ok':'skip',su?'✅':'⬜',su?'F — Single-Use designation set — ISO 15223-1':'F — Single-Use: Not marked');
+
+  // G qty
+  st('oqty_h',gv('fqty'));
+
+  // H IFU
+  const ifu=gb('tifu');
+  vis('oifublock',ifu);vis('oifutag',ifu);
+  st('oifuurl',gv('fifuurl'));
+  updCI('ciH',ifu?'ok':'warn',ifu?'✅':'⚠️',ifu?'H — IFU Reference present — ISO 20417':'H — IFU Reference MISSING — Required for most devices');
+  vis('oqr',gb('tqr'));
+
+  // I storage
+  const store=[gv('ftemp'),gv('fhumid'),gv('fstorenote')].filter(Boolean).join(' · ');
+  st('ostorage',store||'—');
+
+  // J caution
+  const rx=gb('trx');vis('orx',rx);
+  updCI('ciJ',rx?'ok':'skip',rx?'✅':'⬜',rx?'J — Rx Caution present (21 CFR 801.109)':'J — Rx Caution: Not required or not enabled');
+  vis('olatex',gb('tlatex'));
+
+  // Material
+  const mat=gv('fmaterial');
+  if(mat){vis('omatlf',true);st('omat',mat);}else vis('omatlf',false);
+
+  calcScore();
+  const lbl=document.getElementById('lbl');
+  lbl.classList.remove('upd');void lbl.offsetWidth;lbl.classList.add('upd');
+  setTimeout(()=>lbl.classList.remove('upd'),350);
+}
+
+function updCI(id,cls,ico,txt){
+  const el=document.getElementById(id);if(!el)return;
+  el.className='ci '+cls;
+  el.innerHTML='<span class="ciico">'+ico+'</span><div class="citxt">'+txt+'</div>';
+}
+
+function calcScore(){
+  const gv=id=>document.getElementById(id)?.value||'';
+  const gb=id=>document.getElementById(id)?.checked||false;
+  let s=60;
+  if(gv('fcom'))s+=6;if(gv('fref'))s+=6;if(gv('fmfr'))s+=5;if(gv('fcity'))s+=3;
+  if(gv('fudi_di'))s+=6;if(gv('flot'))s+=5;if(gv('fexp'))s+=3;
+  if(gb('tifu'))s+=3;if(gv('ftemp'))s+=2;if(gv('fdesc'))s+=1;
+  s=Math.min(100,s);
+  const sn=document.getElementById('scoreN');if(sn)sn.textContent=s;
+  const ci=document.getElementById('compind');
+  if(ci){ci.textContent=s>=90?'✓ Compliant':s>=75?'⚠ Partial':'✗ Issues Found';ci.style.color=s>=90?'var(--green)':s>=75?'var(--amber)':'var(--red)';}
+}
+
+// TEMPLATES
+const TPLS={
+  cardiac:{fcom:'Cardiac Monitor',fbrand:'ClearHeart CM-400',fref:'ALR-CM-400-01',fdesc:'Continuous cardiac monitoring device for clinical use',flot:'LOT2024-03-A',fserial:'SN-0042891',fmfg:'2024-03-15',fexp:'2026-03-15',fudi_di:'(01)00843217016831',fudi_pi:'(10)LOT2024-03-A(11)240315',ftemp:'15–30°C',fhumid:'15–85% RH',fqty:'1 Each',fifuurl:'ifu.aleramedical.com/cm400',forigin:'Made in Germany'},
+  implant:{fcom:'Bone Anchor',fbrand:'SureGrip BA-7',fref:'ALR-BA-7-01',fdesc:'Sterile single-use bone anchor for orthopaedic fixation',flot:'LOT2024-01-B',fserial:'SN-1000012',fmfg:'2024-01-10',fexp:'2027-01-10',fudi_di:'(01)00843217019900',fudi_pi:'(10)LOT2024-01-B(11)240110',ftemp:'10–25°C',fhumid:'≤80% RH',fqty:'1 Each',fifuurl:'ifu.aleramedical.com/ba7',forigin:'Made in Germany'},
+  sterile:{fcom:'Wound Dressing',fbrand:'HealShield WD-50',fref:'ALR-WD-50-01',fdesc:'Sterile wound care kit — single patient use only',flot:'LOT2024-02-C',fserial:'',fmfg:'2024-02-01',fexp:'2025-02-01',fudi_di:'(01)00843217022334',fudi_pi:'(10)LOT2024-02-C(11)240201',ftemp:'15–25°C',fhumid:'≤60% RH',fqty:'10 per pouch',fifuurl:'ifu.aleramedical.com/wd50',forigin:'Made in USA'},
+  ivd:{fcom:'Blood Glucose Test Kit',fbrand:'GlucoCheck BG-100',fref:'ALR-BG-100-01',fdesc:'In-vitro diagnostic kit for blood glucose measurement',flot:'LOT2024-04-A',fserial:'SN-3309811',fmfg:'2024-04-01',fexp:'2025-04-01',fudi_di:'(01)00843217025110',fudi_pi:'(10)LOT2024-04-A(11)240401',ftemp:'2–8°C storage; 15–35°C in-use',fhumid:'≤75% RH',fqty:'50 test strips per kit',fifuurl:'ifu.aleramedical.com/bg100',forigin:'Made in Germany'},
+  infusion:{fcom:'Infusion Pump',fbrand:'FlowTec IP-220X',fref:'ALR-IP-220X-01',fdesc:'Volumetric infusion pump for hospital and ambulatory use',flot:'LOT2024-03-D',fserial:'SN-4410022',fmfg:'2024-03-20',fexp:'2027-03-20',fudi_di:'(01)00843217028001',fudi_pi:'(10)LOT2024-03-D(11)240320',ftemp:'15–30°C',fhumid:'20–80% RH',fqty:'1 Each',fifuurl:'ifu.aleramedical.com/ip220x',forigin:'Made in Germany'},
+};
+const TPLFLAGS={cardiac:{tster:false,tsu:false,trx:false,tifu:true},implant:{tster:true,tsu:true,trx:false,tifu:true},sterile:{tster:true,tsu:true,trx:false,tifu:true},ivd:{tster:false,tsu:true,trx:false,tifu:true},infusion:{tster:false,tsu:false,trx:true,tifu:true}};
+function applyTpl(k){
+  if(!TPLS[k])return;
+  for(const[id,v]of Object.entries(TPLS[k])){const el=document.getElementById(id);if(el)el.value=v;}
+  const f=TPLFLAGS[k]||{};
+  ['tster','tsu','trx','tifu','tqr'].forEach(id=>{const el=document.getElementById(id);if(el)el.checked=!!f[id];});
+  upd();
+  showT('📋 Template: '+k.charAt(0).toUpperCase()+k.slice(1));
+}
+
+// VIEW
+function gv(v,btn){
+  document.querySelectorAll('.view').forEach(x=>x.classList.remove('active'));
+  document.querySelectorAll('.ntab').forEach(x=>x.classList.remove('active'));
+  const el=document.getElementById('v'+v);if(el){el.classList.add('active');el.classList.add('fi');}
+  if(btn)btn.classList.add('active');
+  else{const tabs=document.querySelectorAll('.ntab');if(v==='dash')tabs[0].classList.add('active');else tabs[1].classList.add('active');}
+}
+
+// PANEL
+function swRP(n){
+  document.querySelectorAll('.rptab').forEach(t=>t.classList.remove('active'));
+  ['comp','exp','hist'].forEach(x=>{document.getElementById('rp-'+x).style.display=x===n?'':'none';});
+  const t=document.getElementById('rt-'+n);if(t)t.classList.add('active');
+}
+
+// ZOOM
+let cz=1;
+function zoom(d){
+  cz=d===0?1:Math.max(.3,Math.min(2.2,cz+d));
+  document.getElementById('lbl').style.transform='scale('+cz+')';
+  document.getElementById('lbl').style.transformOrigin='top center';
+  document.getElementById('znum').textContent=Math.round(cz*100)+'%';
+}
+
+// SIZE
+function updSz(){
+  const v=document.getElementById('fsize').value;
+  const mc={s:'ssz',sm:'smz',lg:'slz'};
+  const ml={s:'102 × 64 mm · 300 DPI',sm:'76 × 51 mm · 300 DPI',lg:'150 × 100 mm · 300 DPI'};
+  document.getElementById('lbl').className='label '+(mc[v]||'ssz');
+  zoom(0);
+  document.getElementById('szlabel').textContent=ml[v]||ml.s;
+  showT('📐 Size updated');
+}
+
+// TOAST
+let tt;
+function showT(msg){
+  clearTimeout(tt);
+  document.getElementById('tmsg').textContent=msg;
+  document.getElementById('toast').classList.add('show');
+  tt=setTimeout(()=>document.getElementById('toast').classList.remove('show'),2500);
+}
+
+// INIT
+renderGrid();
+upd();
+</script>
+</body>
+</html>
